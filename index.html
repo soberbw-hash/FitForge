@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<title>FitForge · 健身动作库与训练计划</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ═══ ICON SPRITE ═══ -->
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".9" fill="currentColor"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.3s-7.4-4.6-7.4-9.5A4.25 4.25 0 0 1 12 7.7a4.25 4.25 0 0 1 7.4 3.1c0 4.9-7.4 9.5-7.4 9.5Z"/></symbol>
+  <symbol id="i-heart-fill" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.3s-7.4-4.6-7.4-9.5A4.25 4.25 0 0 1 12 7.7a4.25 4.25 0 0 1 7.4 3.1c0 4.9-7.4 9.5-7.4 9.5Z"/></symbol>
+  <symbol id="i-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 4.6V3.9A1.4 1.4 0 0 1 10.4 2.5h3.2A1.4 1.4 0 0 1 15 3.9v.7M8.6 10h6.8M8.6 14h6.8M8.6 18h4"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20.5h18"/><rect x="4.8" y="11" width="3.8" height="6.2" rx="1.3"/><rect x="10.1" y="6" width="3.8" height="11.2" rx="1.3"/><rect x="15.4" y="13.2" width="3.8" height="4" rx="1.3"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.7-4.7"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 14.6A8.6 8.6 0 0 1 9.4 3.8 8.6 8.6 0 1 0 20.2 14.6Z"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.2V12l3.2 2"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9.6 7V4.9A1.4 1.4 0 0 1 11 3.5h2a1.4 1.4 0 0 1 1.4 1.4V7M6.6 7l.8 12.1A1.9 1.9 0 0 0 9.3 21h5.4a1.9 1.9 0 0 0 1.9-1.9L17.4 7"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L18.6 9.4a2.12 2.12 0 0 0-3-3L5 17.4V20Z"/><path d="m14.6 5.4 3 3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-dumbbell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5v5M6.5 6.5v11M17.5 6.5v11M21 9.5v5M6.5 12h11"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8s4.8 3.9 4.8 7.8a4.8 4.8 0 0 1-9.6 0c0-1.5.7-2.7 1.5-3.7.3 1.4 1.1 2.2 2.1 2.2 1.3 0 2-1.2 2-2.8 0-1.1-.3-2.4-.8-3.7Z"/><path d="M12 21a5 5 0 0 0 5-5"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h9M18.5 7H20M4 17h3.5M13 17h7"/><circle cx="15.2" cy="7" r="2.2"/><circle cx="9.7" cy="17" r="2.2"/></symbol>
+  <symbol id="i-rotate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20.5 4v4.5H16"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13.5 6.5 20 12l-6.5 5.5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M7 4.8v14.4a.6.6 0 0 0 .92.5l11-7.2a.6.6 0 0 0 0-1l-11-7.2a.6.6 0 0 0-.92.5Z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="6" y="4.5" width="4" height="15" rx="1.4"/><rect x="14" y="4.5" width="4" height="15" rx="1.4"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 2.5 4 13.8h6.4L10.2 21.5 20 10.2h-6.6l.1-7.7Z"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="8.6" cy="9.4" r="1.6"/><path d="m3.5 17.2 4.8-4.6a1.6 1.6 0 0 1 2.2 0l3.1 3 2-1.9a1.6 1.6 0 0 1 2.2 0l2.7 2.6"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11M7.5 10.5 12 15l4.5-4.5M4 17.5v1.6A1.4 1.4 0 0 0 5.4 20.5h13.2a1.4 1.4 0 0 0 1.4-1.4v-1.6"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20c0-8 5-14 16-14 0 10-5 15-11 15a5.4 5.4 0 0 1-5-1Z"/><path d="M9.5 15.5c1.5-3 4-5.2 7-6.5"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6h.01"/></symbol>
+</svg>
+
+<!-- ═══ TOP BAR ═══ -->
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand" data-view="library" title="回到动作库">
+      <span class="brand-mark"><svg class="ic"><use href="#i-dumbbell"/></svg></span>
+      <span class="brand-txt">FitForge</span>
+    </div>
+
+    <nav class="nav" id="mainNav">
+      <button class="nav-item active" data-view="library"><svg class="ic"><use href="#i-grid"/></svg><span>动作库</span></button>
+      <button class="nav-item" data-view="planner"><svg class="ic"><use href="#i-calendar"/></svg><span>周计划</span></button>
+      <button class="nav-item" data-view="musclemap"><svg class="ic"><use href="#i-target"/></svg><span>肌肉地图</span></button>
+      <button class="nav-item" data-view="favorites"><svg class="ic"><use href="#i-heart"/></svg><span>收藏</span><i class="nav-count" id="favCount">0</i></button>
+      <button class="nav-item" data-view="log"><svg class="ic"><use href="#i-clipboard"/></svg><span>记录</span></button>
+      <button class="nav-item" data-view="stats"><svg class="ic"><use href="#i-chart"/></svg><span>概览</span></button>
+      <button class="nav-item" data-view="tools"><svg class="ic"><use href="#i-sliders"/></svg><span>工具箱</span></button>
+    </nav>
+
+    <div class="top-right">
+      <button class="icon-btn" id="todayCardBtn" title="今日训练卡" aria-label="查看今日训练卡" onclick="openExport('today')"><svg class="ic"><use href="#i-image"/></svg></button>
+      <button class="icon-btn" id="themeBtn" title="切换深浅主题" aria-label="切换深浅主题"><svg class="ic"><use href="#i-moon"/></svg></button>
+      <button class="btn btn-solid" id="logTopBtn" title="补录一次已完成的训练" onclick="showLogModal()"><svg class="ic"><use href="#i-plus"/></svg><span>补录</span></button>
+    </div>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- ═══ LIBRARY ═══ -->
+  <section class="view active" id="view-library">
+    <div class="page-head">
+      <div>
+        <h1>动作库</h1>
+        <p class="page-sub">1324 个动作 · 真人演示动图 · 中文分步要领</p>
+      </div>
+    </div>
+
+    <div class="welcome-bar" id="welcomeBar" hidden>
+      <span class="wb-ic"><svg class="ic"><use href="#i-info"/></svg></span>
+      <div class="wb-txt"><b>第一次用？三步开练</b><span>在周计划挑一套模板 → 点顶栏「开始训练」跟着做 → 需要时导出训练卡</span></div>
+      <div class="wb-acts">
+        <button class="btn btn-solid btn-sm" onclick="dismissWelcome();switchView('planner')">去排计划</button>
+        <button class="btn btn-ghost btn-sm" onclick="dismissWelcome()">知道了</button>
+      </div>
+    </div>
+
+    <div class="filters" id="filtersBar">
+      <div class="search">
+        <svg class="ic search-ic"><use href="#i-search"/></svg>
+        <input type="text" id="searchInput" placeholder="搜动作、肌群或器械…" oninput="doFilter()" aria-label="搜索动作">
+        <kbd class="kbd">/</kbd>
+      </div>
+      <button class="btn btn-ghost filter-toggle" id="filterToggle" onclick="toggleFilters()" aria-expanded="false" aria-controls="filtersAdv">
+        <svg class="ic"><use href="#i-sliders"/></svg><span>筛选</span><i class="filter-badge" id="filterBadge" hidden>0</i>
+        <svg class="ic chev"><use href="#i-chevron"/></svg>
+      </button>
+      <div class="result-count"><b id="resultNum">0</b> 个动作</div>
+
+      <div class="filters-adv" id="filtersAdv">
+        <select class="sel" id="equipSelect" onchange="doFilter()" aria-label="按器械筛选"><option value="all">全部器械</option></select>
+        <select class="sel" id="diffSelect" onchange="doFilter()" aria-label="按难度筛选">
+          <option value="all">全部难度</option>
+          <option value="beginner">初级</option>
+          <option value="intermediate">中级</option>
+          <option value="advanced">高级</option>
+        </select>
+        <select class="sel" id="forceSelect" onchange="doFilter()" aria-label="按发力筛选">
+          <option value="all">全部发力</option>
+          <option value="push">推</option>
+          <option value="pull">拉</option>
+          <option value="static">静态</option>
+        </select>
+        <select class="sel" id="mechSelect" onchange="doFilter()" aria-label="按类型筛选">
+          <option value="all">全部类型</option>
+          <option value="compound">复合</option>
+          <option value="isolation">孤立</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="chip-row" id="muscleFilters"></div>
+    <div class="grid" id="exGrid"></div>
+  </section>
+
+  <!-- ═══ PLANNER ═══ -->
+  <section class="view" id="view-planner">
+    <div class="page-head">
+      <div>
+        <h1>周计划</h1>
+        <p class="page-sub">点动作改组次，点「+」加动作</p>
+      </div>
+      <div class="head-actions">
+        <button class="btn btn-ghost" onclick="clearPlan()"><svg class="ic"><use href="#i-trash"/></svg>清空</button>
+        <button class="btn btn-solid" onclick="openExport('all')"><svg class="ic"><use href="#i-image"/></svg>导出训练卡</button>
+      </div>
+    </div>
+
+    <div id="todayStrip"></div>
+    <div class="tpl-row" id="tplRow"></div>
+    <div class="week" id="weekGrid"></div>
+  </section>
+
+  <!-- ═══ MUSCLE MAP ═══ -->
+  <section class="view" id="view-musclemap">
+    <div class="page-head">
+      <div>
+        <h1>肌肉地图</h1>
+        <p class="page-sub">点身体部位，找对应动作</p>
+      </div>
+    </div>
+    <div class="map-wrap">
+      <div class="panel map-panel">
+        <div class="seg" id="bodyTabs">
+          <button class="seg-btn on" data-v="front" onclick="showBodyView('front')">正面</button>
+          <button class="seg-btn" data-v="back" onclick="showBodyView('back')">背面</button>
+        </div>
+        <div id="bodySvgContainer" class="body-holder"></div>
+        <div class="map-hint">有颜色的部位都能点</div>
+      </div>
+      <div class="panel map-info">
+        <h2 id="muscleName">肌群速览</h2>
+        <p class="mp-sub" id="muscleSub">按动作数量排序</p>
+        <div id="muscleExList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FAVORITES ═══ -->
+  <section class="view" id="view-favorites">
+    <div class="page-head">
+      <div>
+        <h1>收藏</h1>
+        <p class="page-sub">把常练的动作放这儿</p>
+      </div>
+    </div>
+    <div class="grid" id="favGrid"></div>
+  </section>
+
+  <!-- ═══ LOG ═══ -->
+  <section class="view" id="view-log">
+    <div class="page-head">
+      <div>
+        <h1>训练记录</h1>
+        <p class="page-sub">每次完成的组数、次数与重量</p>
+      </div>
+    </div>
+    <div id="logList" class="log-list"></div>
+  </section>
+
+  <!-- ═══ STATS ═══ -->
+  <section class="view" id="view-stats">
+    <div class="page-head">
+      <div>
+        <h1>概览</h1>
+        <p class="page-sub">练了多少、还差哪儿</p>
+      </div>
+    </div>
+    <div class="stat-row" id="statsRow"></div>
+    <div id="statsDetail"></div>
+    <div id="statsExtra"></div>
+  </section>
+
+  <!-- ═══ TOOLS ═══ -->
+  <section class="view" id="view-tools">
+    <div class="page-head">
+      <div>
+        <h1>工具箱</h1>
+        <p class="page-sub">常用计算与本地备份</p>
+      </div>
+    </div>
+    <div id="toolsBody"></div>
+  </section>
+
+</main>
+
+<!-- ═══ DETAIL MODAL ═══ -->
+<div class="overlay" id="detailModal">
+  <div class="modal modal-lg">
+    <button class="modal-x" onclick="closeModal('detailModal')" aria-label="关闭"><svg class="ic"><use href="#i-x"/></svg></button>
+    <div class="modal-body detail-body" id="detailBody"></div>
+    <div class="modal-foot" id="detailActions"></div>
+  </div>
+</div>
+
+<!-- ═══ PICKER MODAL ═══ -->
+<div class="overlay" id="pickerModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="pickerTitle">添加动作</h3>
+      <button class="modal-x" onclick="closeModal('pickerModal')" aria-label="关闭"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="search" style="margin-bottom:14px">
+        <svg class="ic search-ic"><use href="#i-search"/></svg>
+        <input type="text" id="pickerSearch" placeholder="搜索动作…" oninput="filterPicker()" aria-label="搜索要添加的动作">
+      </div>
+      <div class="picker-list" id="pickerList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LOG MODAL ═══ -->
+<div class="overlay" id="logModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>补录训练 <span class="modal-date" id="logDate"></span></h3>
+      <button class="modal-x" onclick="closeModal('logModal')" aria-label="关闭"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p class="hint">填今天实际练了什么，跟练模式会自动帮你记</p>
+      <div id="logExList"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-solid" onclick="saveLog()"><svg class="ic"><use href="#i-check"/></svg>保存记录</button>
+      <button class="btn btn-ghost" onclick="closeModal('logModal')">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EDIT PLAN ITEM MODAL ═══ -->
+<div class="overlay" id="editItemModal">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <h3 id="editItemTitle">调整训练参数</h3>
+      <button class="modal-x" onclick="closeModal('editItemModal')" aria-label="关闭"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="edit-fields">
+        <label>组数<input type="number" id="editSets" min="1" max="20" inputmode="numeric"></label>
+        <label>每组次数<input type="number" id="editReps" min="1" max="100" inputmode="numeric"></label>
+        <label>重量 kg<input type="number" id="editWeight" min="0" step="2.5" placeholder="自重留空" inputmode="decimal"></label>
+      </div>
+      <p class="hint">重量留空按自重算，不计入训练容量。</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-solid" onclick="saveEditItem()">保存</button>
+      <button class="btn btn-ghost" onclick="closeModal('editItemModal')">取消</button>
+      <button class="btn btn-ghost btn-danger" onclick="removePlanItem()">移除动作</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EXPORT MODAL ═══ -->
+<div class="overlay" id="exportModal">
+  <div class="modal export-modal">
+    <div class="modal-head export-head">
+      <h3>训练卡 <span class="modal-date" id="exportCount"></span></h3>
+      <button class="modal-x" onclick="closeModal('exportModal')" aria-label="关闭"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="export-toolbar">
+      <div class="seg" role="group" aria-label="导出范围">
+        <button class="seg-btn on" data-range="all" onclick="setExportRange('all')">全部训练日</button>
+        <button class="seg-btn" data-range="today" onclick="setExportRange('today')">仅今天</button>
+      </div>
+      <div class="seg" role="group" aria-label="导出格式">
+        <button class="seg-btn on" data-fmt="gif" onclick="setExportFormat('gif')">会动 · GIF</button>
+        <button class="seg-btn" data-fmt="png" onclick="setExportFormat('png')">静态 · PNG</button>
+      </div>
+      <label class="export-check"><input type="checkbox" id="exportSteps" checked onchange="toggleExportNotes()"><span>含动作要领</span></label>
+    </div>
+    <div class="export-preview" id="exportPreview"></div>
+    <div class="modal-foot export-foot">
+      <button class="btn btn-solid" id="exportAllBtn" onclick="downloadAllCards()"><svg class="ic"><use href="#i-download"/></svg><span>保存全部</span></button>
+      <span class="export-tip" id="exportTip">1080px · 一天一张</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CARD LIGHTBOX ═══ -->
+<div class="lightbox" id="cardLightbox" onclick="closeCardLightbox()">
+  <button class="lightbox-x" onclick="closeCardLightbox()" aria-label="关闭"><svg class="ic"><use href="#i-x"/></svg></button>
+  <div class="lightbox-in" onclick="event.stopPropagation()">
+    <img id="cardLightboxImg" alt="训练卡大图" hidden>
+    <div class="lightbox-cap" id="cardLightboxCap"></div>
+    <button class="btn btn-solid" onclick="downloadCard(exportState.active)"><svg class="ic"><use href="#i-download"/></svg>保存这张</button>
+  </div>
+</div>
+
+<!-- ═══ REST TIMER ═══ -->
+<div class="timer" id="timerWidget">
+  <div class="timer-head">
+    <span class="timer-label"><svg class="ic"><use href="#i-clock"/></svg>休息计时</span>
+    <button class="icon-btn xs" onclick="closeTimer()" aria-label="关闭计时器"><svg class="ic"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="timer-time" id="timerTime">00:00</div>
+  <div class="timer-bar"><i id="timerFill"></i></div>
+  <div class="timer-acts">
+    <button class="icon-btn" onclick="toggleTimer()" id="timerToggle" aria-label="暂停或继续"><svg class="ic"><use href="#i-pause"/></svg></button>
+    <button class="btn btn-ghost btn-sm" onclick="resetTimer()" aria-label="重新开始"><svg class="ic"><use href="#i-rotate"/></svg></button>
+    <button class="btn btn-soft btn-sm" onclick="startRestTimer(60)">+60s</button>
+    <button class="btn btn-soft btn-sm" onclick="startRestTimer(90)">+90s</button>
+  </div>
+</div>
+
+<!-- ═══ GUIDED SESSION ═══ -->
+<div class="overlay session-overlay" id="sessionModal">
+  <div class="session">
+    <div class="session-head" id="sessionHead"></div>
+    <div class="session-scroll"><div class="session-body" id="sessionBody"></div></div>
+    <div class="session-foot" id="sessionFoot"></div>
+  </div>
+</div>
+
+<!-- ═══ SHORTCUT HELP ═══ -->
+<div class="overlay" id="helpModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>键盘快捷键</h3>
+      <button class="modal-x" onclick="closeModal('helpModal')" aria-label="关闭"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="shortcut-list">
+        <div><kbd>1</kbd>–<kbd>7</kbd><span>依次切换：动作库 · 周计划 · 肌肉地图 · 收藏 · 记录 · 概览 · 工具箱</span></div>
+        <div><kbd>/</kbd><span>聚焦搜索框</span></div>
+        <div><kbd>S</kbd><span>开始今天的训练</span></div>
+        <div><kbd>N</kbd><span>补录一次训练</span></div>
+        <div><kbd>T</kbd><span>切换深浅主题</span></div>
+        <div><kbd>Esc</kbd><span>关闭当前弹窗</span></div>
+        <div><kbd>?</kbd><span>打开这个帮助</span></div>
+      </div>
+      <p class="tool-note">在输入框里打字时，字母快捷键不会触发。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 单个动作大图（跟练） ═══ -->
+<div class="lightbox" id="moveLightbox" onclick="closeMoveLightbox()">
+  <button class="lightbox-x" onclick="closeMoveLightbox()" aria-label="关闭"><svg class="ic"><use href="#i-x"/></svg></button>
+  <div class="lightbox-in move-lightbox" onclick="event.stopPropagation()">
+    <img id="moveLightboxImg" alt="动作演示" hidden>
+    <div class="move-info">
+      <span id="moveLightboxIdx"></span>
+      <h4 id="moveLightboxName"></h4>
+      <p class="move-meta" id="moveLightboxMeta"></p>
+      <p class="move-note" id="moveLightboxNote"></p>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toastBox" aria-live="polite"></div>
+
+<script src="data.js"></script>
+<script src="thumbs_data.js"></script>
+<script src="extra_data.js"></script>
+<script src="gif_encoder.js"></script>
+<script src="app.js"></script>
+<script src="export_card.js"></script>
+<script src="session.js"></script>
+<script src="power.js"></script>
+<script type="application/json" id="animFrames">{}</script>
+</body>
+</html>
