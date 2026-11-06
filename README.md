@@ -27,6 +27,22 @@ cd FitForge
 
 **注意**：`gifs/` 文件夹必须和 `fitforge.html` 放在同一目录，否则动作演示图加载不出来（应用会自动退回内嵌首帧图，不会白屏）。
 
+## 部署到 Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/soberbw-hash/FitForge)
+
+**推荐**：在 [Vercel 控制台](https://vercel.com/new) 选 **Add New → Project → Import Git Repository → `soberbw-hash/FitForge` → Deploy**，授权 GitHub 后其余保持默认即可（纯静态、Framework 选 `Other`、无需构建命令）。之后每次 `git push` 到 `main` 会自动重新部署。
+
+也可以直接点上方的 **Deploy with Vercel** 按钮，它会把公开仓库复制到你自己账号下再部署。
+
+几个已经配好的点：
+
+- `vercel.json` 把根路径 `/` 指向 `fitforge.html`。仓库根的 `index.html` 是开发用骨架（动画帧数据为空），**不能**当线上入口。
+- `gifs/` 需与成品同目录，仓库结构已满足；GIF 设了长期缓存，HTML 不缓存以便更新即时生效。
+- `.vercelignore` 只保留单文件成品和 `gifs/`，源码与构建中间产物不发布。
+
+> ⚠️ 不要用 `vercel` CLI 直接上传：Hobby 计划对 CLI 源文件限制 100MB，而 `gifs/` 单独就有 127MB，会被拒绝。Git 集成由 Vercel 从 GitHub 侧拉取仓库，不受这条限制。
+
 ## 截图
 
 | 动作库 | 周计划 |

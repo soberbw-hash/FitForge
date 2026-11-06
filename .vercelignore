@@ -1,0 +1,29 @@
+# 线上只需要单文件成品 + 动作 GIF，源码与构建中间产物不参与部署
+.git/
+*.md
+docs/
+audit_shots/
+_*
+
+# 源码骨架（线上入口由 vercel.json 指向 fitforge.html）
+index.html
+style.css
+app.js
+session.js
+power.js
+export_card.js
+gif_encoder.js
+body_svg.js
+templates.js
+translate.js
+
+# 构建中间产物 / 原始数据（均已内联进 fitforge.html）
+data.js
+extra_data.js
+thumbs_data.js
+anim_frames.json
+exercises_raw.json
+gif_download_list.json
+build_*.js
+build_anim.py
+LICENSE
