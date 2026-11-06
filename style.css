@@ -861,13 +861,18 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
   cursor: zoom-in;
   background: #FFFFFF;
   border-bottom: 1px solid var(--line);
-  padding: 10px;
-  display: grid; place-items: center;
+  height: 268px; overflow: hidden; position: relative;
 }
 .export-card-img img {
-  display: block; width: 100%; height: auto;
-  max-height: 340px; object-fit: contain; object-position: top;
-  border-radius: 4px;
+  display: block; width: 100%; height: auto; max-height: none;
+}
+.export-card-img::after {
+  content: '点击查看完整长图';
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 26px 8px 9px; text-align: center;
+  font-size: 11px; letter-spacing: .03em; color: #fff;
+  background: linear-gradient(transparent, rgba(23,22,15,.66));
+  pointer-events: none;
 }
 .export-card-bar {
   display: flex; align-items: center; justify-content: space-between;
@@ -990,7 +995,7 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
   }
   .export-card { margin-bottom: 16px; min-width: 0; }
   .export-empty { padding: 22vh 20px; }
-  .export-card-img img { max-height: 420px; }
+  .export-card-img { height: 320px; }
   .export-foot { padding: 12px 18px calc(12px + env(safe-area-inset-bottom)); }
   .export-tip { display: none; }
   .export-foot .btn { width: 100%; }

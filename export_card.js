@@ -11,13 +11,46 @@ const CARD = {
   W: 1080,
   PAD: 64,
   HEADER: 286,
-  ITEM_H: 316,
-  ITEM_H_NOTE: 392,
+  // 动作图是这张卡的主角：520px 见方，占卡片宽度约 48%
+  IMG: 520,
+  IMG_PAD: 8,
+  BLOCK_TOP: 8,
+  GAP: 32,
+  ITEM_H: 568,
   FOOTER: 132,
   FONT: '"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif'
 };
 
-const ANIM = { FRAMES: 8, SRC: 112, DELAY: 140 };
+// 内嵌 sprite sheet 每帧 180px（= 原始 GIF 分辨率）
+const ANIM = { FRAMES: 8, SRC: 180, DELAY: 140 };
+const IMG_IN = CARD.IMG - CARD.IMG_PAD * 2;   // 实际画面 504px
+
+/* 第 i 个动作图在画布上的位置 */
+function imgRect(i, itemH) {
+  return {
+    x: CARD.PAD + CARD.IMG_PAD,
+    y: CARD.HEADER + i * itemH + CARD.BLOCK_TOP + CARD.IMG_PAD,
+    w: IMG_IN, h: IMG_IN
+  };
+}
+
+/* 统一的绘制入口：静态首帧与 GIF 每一帧走同一段代码，切换时不会跳变 */
+function paintFrame(ctx, sheet, f, r) {
+  ctx.save();
+  rr(ctx, r.x, r.y, r.w, r.h, 14);
+  ctx.clip();
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(r.x, r.y, r.w, r.h);
+  if (sheet) {
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(sheet, f * ANIM.SRC, 0, ANIM.SRC, ANIM.SRC, r.x, r.y, r.w, r.h);
+  } else {
+    ctx.fillStyle = '#EDEAE3';
+    ctx.fillRect(r.x, r.y, r.w, r.h);
+  }
+  ctx.restore();
+}
 
 let exportState = {
   range: 'all', format: 'gif', withNotes: true,
@@ -74,20 +107,32 @@ function drawWrapped(ctx, text, x, y, maxW, lineH, maxLines) {
   return { lines: lines.length, endY: y + (lines.length - 1) * lineH };
 }
 
-function loadThumb(id) {
-  return new Promise(resolve => {
-    const src = (typeof EXERCISE_THUMBS !== 'undefined') && EXERCISE_THUMBS[id];
-    if (!src) { resolve(null); return; }
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = src;
-  });
+/* 名称最长 20 字，按实际宽度自动缩字号，保证两行完整显示不省略 */
+function fitNameFont(ctx, text, maxW, maxLines, base, min) {
+  const chars = Array.from(String(text || ''));
+  for (let size = base; size >= min; size -= 2) {
+    setFont(ctx, size, 680);
+    let lines = 1, w = 0;
+    for (const ch of chars) {
+      const cw = ctx.measureText(ch).width;
+      if (w + cw > maxW) { lines++; w = cw; } else w += cw;
+    }
+    if (lines <= maxLines) return size;
+  }
+  return min;
 }
 
+/* 取要领开头几步，按标点断句，保证四行内完整显示不留半截话 */
 function shortGist(text) {
-  const parts = String(text || '').split(/\s+/).filter(Boolean);
-  return parts.slice(0, 2).join('');
+  const seg = String(text || '').split('。').map(s => s.trim()).filter(Boolean);
+  if (!seg.length) return '';
+  const all = seg.map(s => s + '。').join('');
+  if (all.length <= 56) return all;
+  const head = all.slice(0, 55);
+  const stop = Math.max(head.lastIndexOf('。'), head.lastIndexOf('，'), head.lastIndexOf('、'));
+  if (stop <= 30) return head + '…';
+  const cut = head.slice(0, stop + 1);
+  return cut + (head.charAt(stop) === '。' ? '' : '…');
 }
 
 function todayKey() {
@@ -134,34 +179,18 @@ async function ensureSheets(c) {
 
 /* 把第 f 帧画到卡片左侧所有动作图的位置 */
 function paintAnimFrames(ctx, sheets, f, items, itemH) {
-  const P = CARD.PAD, IMG = 208;
-  items.forEach((x, i) => {
-    const sheet = sheets[i];
-    const dx = P + 6, dy = CARD.HEADER + i * itemH + 14, d = IMG - 12;
-    ctx.save();
-    rr(ctx, dx, dy, d, d, 12);
-    ctx.clip();
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(dx, dy, d, d);
-    if (sheet) {
-      ctx.drawImage(sheet, f * ANIM.SRC, 0, ANIM.SRC, ANIM.SRC, dx, dy, d, d);
-    } else {
-      ctx.fillStyle = '#EDEAE3';
-      ctx.fillRect(dx, dy, d, d);
-    }
-    ctx.restore();
-  });
+  items.forEach((x, i) => paintFrame(ctx, sheets[i], f, imgRect(i, itemH)));
 }
 
-/* 生成一张会动的 GIF：第 0 帧整卡，其余帧只更新动作所在的竖条区域 */
+/* 生成一张会动的 GIF：第 0 帧整卡，其余帧只更新动作图所在的竖条区域 */
 async function makeAnimatedCard(c) {
   if (typeof GIFKit === 'undefined') return null;
   const sheets = await ensureSheets(c);
   if (!sheets.some(Boolean)) return null;
 
   const ctx = c.canvas.getContext('2d', { willReadFrequently: true });
-  const P = CARD.PAD, IMG = 208;
-  const rx = P + 6, ry = CARD.HEADER + 14, rw = IMG - 12;
+  const first = imgRect(0, c.itemH);
+  const rx = first.x, ry = first.y, rw = first.w;
   const rh = (c.items.length - 1) * c.itemH + rw;
   if (rh <= 0 || ry + rh > c.canvas.height) return null;
 
@@ -193,8 +222,11 @@ async function buildCard(dayKey) {
   })).filter(x => x.ex);
 
   const withNotes = exportState.withNotes;
-  const itemH = withNotes ? CARD.ITEM_H_NOTE : CARD.ITEM_H;
+  const itemH = CARD.ITEM_H;
   const H = CARD.HEADER + items.length * itemH + CARD.FOOTER + CARD.PAD;
+
+  // 直接取 180px 动画帧的第 0 帧做静态底图；比旧的 140px 缩略图清楚
+  const sheets = await Promise.all(items.map(x => loadAnimSheet(x.ex.id)));
 
   const canvas = document.createElement('canvas');
   canvas.width = CARD.W;
@@ -268,10 +300,7 @@ async function buildCard(dayKey) {
   ctx.lineTo(CARD.W - P, CARD.HEADER - 26);
   ctx.stroke();
 
-  // 预载所有静态缩略图
-  const thumbs = await Promise.all(items.map(x => loadThumb(x.ex.id)));
-
-  // 动作块
+  // 动作块：左边 520px 大图，右边是配套信息
   items.forEach((x, i) => {
     const { ex, it } = x;
     const top = CARD.HEADER + i * itemH;
@@ -279,66 +308,56 @@ async function buildCard(dayKey) {
     const eq = EQUIPMENT[ex.equipment]?.name || ex.equipment;
     const diff = DIFFICULTY[ex.difficulty]?.name || '';
 
-    // 缩略图白底卡片
-    const IMG = 208;
+    // 大图白底卡片
     ctx.save();
-    ctx.shadowColor = 'rgba(24,22,18,.07)';
-    ctx.shadowBlur = 18;
-    ctx.shadowOffsetY = 4;
+    ctx.shadowColor = 'rgba(24,22,18,.08)';
+    ctx.shadowBlur = 22;
+    ctx.shadowOffsetY = 5;
     ctx.fillStyle = '#FFFFFF';
-    rr(ctx, P, top + 8, IMG, IMG, 16); ctx.fill();
+    rr(ctx, P, top + CARD.BLOCK_TOP, CARD.IMG, CARD.IMG, 20); ctx.fill();
     ctx.restore();
     ctx.strokeStyle = 'rgba(24,22,18,.07)';
     ctx.lineWidth = 1.5;
-    rr(ctx, P, top + 8, IMG, IMG, 16); ctx.stroke();
+    rr(ctx, P, top + CARD.BLOCK_TOP, CARD.IMG, CARD.IMG, 20); ctx.stroke();
+    paintFrame(ctx, sheets[i], 0, imgRect(i, itemH));
 
-    if (thumbs[i]) {
-      ctx.save();
-      rr(ctx, P + 6, top + 14, IMG - 12, IMG - 12, 12);
-      ctx.clip();
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(P + 6, top + 14, IMG - 12, IMG - 12);
-      ctx.drawImage(thumbs[i], P + 6, top + 14, IMG - 12, IMG - 12);
-      ctx.restore();
-    } else {
-      ctx.fillStyle = '#EDEAE3';
-      setFont(ctx, 56, 700);
-      ctx.textAlign = 'center';
-      ctx.fillText(String(i + 1).padStart(2, '0'), P + IMG / 2, top + 8 + IMG / 2 + 20);
-      ctx.textAlign = 'left';
-    }
-
-    const TX = P + IMG + 30;
-    const TW = innerW - IMG - 30;
+    const TX = P + CARD.IMG + CARD.GAP;
+    const TW = innerW - CARD.IMG - CARD.GAP;
 
     // 序号
     ctx.fillStyle = '#E8502E';
-    setFont(ctx, 23, 700);
-    ctx.fillText(String(i + 1).padStart(2, '0'), TX, top + 40);
+    setFont(ctx, 24, 700);
+    ctx.fillText(String(i + 1).padStart(2, '0'), TX, top + 46);
 
-    // 动作名（单行，超长才省略）
+    // 动作名：按实际宽度自动缩字号，两行完整显示
+    const nameSize = fitNameFont(ctx, ex.name, TW - 56, 2, 40, 27);
     ctx.fillStyle = '#17160F';
-    setFont(ctx, 40, 680);
-    drawWrapped(ctx, ex.name, TX + 52, top + 44, TW - 52, 48, 1);
+    setFont(ctx, nameSize, 680);
+    drawWrapped(ctx, ex.name, TX + 56, top + 50, TW - 56, nameSize + 8, 2);
 
     // 英文名
     ctx.fillStyle = '#A9A399';
     setFont(ctx, 21, 400);
-    drawWrapped(ctx, ex.nameEn || '', TX, top + 84, TW, 28, 1);
+    drawWrapped(ctx, ex.nameEn || '', TX, top + 142, TW, 28, 1);
 
     // 组次
     ctx.fillStyle = '#17160F';
-    setFont(ctx, 32, 650);
     const setsTxt = (it.sets || 3) + ' 组  ×  ' + (it.reps || 10) + ' 次'
-      + (it.weight ? '     @ ' + it.weight + ' kg' : '');
-    ctx.fillText(setsTxt, TX, top + 140);
+      + (it.weight ? '   @ ' + it.weight + ' kg' : '');
+    let setsSize = 33;
+    setFont(ctx, setsSize, 650);
+    while (setsSize > 25 && ctx.measureText(setsTxt).width > TW) {
+      setsSize -= 2; setFont(ctx, setsSize, 650);
+    }
+    ctx.fillText(setsTxt, TX, top + 204);
 
     // 标签行
     let lx = TX;
-    const ly = top + 168;
+    const ly = top + 230;
     const tag = (label, color, bg) => {
       ctx.font = '500 20px ' + CARD.FONT;
       const w = ctx.measureText(label).width + 28;
+      if (lx + w > TX + TW) return;   // 放不下就不画，绝不压到大图上
       ctx.fillStyle = bg;
       rr(ctx, lx, ly, w, 38, 19); ctx.fill();
       if (color) {
@@ -354,16 +373,16 @@ async function buildCard(dayKey) {
     if (eq) tag(eq, null, '#FFFFFF');
     if (diff) tag(diff, null, '#F1EFEA');
 
-    // 动作要领
+    // 动作要领：放在右侧下半部，不额外撑高卡片
     if (withNotes) {
       const gist = shortGist(ex.instructions);
       ctx.fillStyle = '#8A857A';
-      setFont(ctx, 22, 400);
-      ctx.fillText('动作要领', TX, top + 244);
+      setFont(ctx, 21, 400);
+      ctx.fillText('动作要领', TX, top + 328);
       ctx.fillStyle = '#5F5C53';
       setFont(ctx, 23, 400);
       drawWrapped(ctx, gist || '按标准姿势完成动作，注意控制节奏与呼吸。',
-        TX, top + 282, TW, 34, 2);
+        TX, top + 366, TW, 34, 4);
     }
 
     // 块间分隔
@@ -391,7 +410,7 @@ async function buildCard(dayKey) {
   ctx.textAlign = 'left';
 
   return {
-    canvas, dayKey, items, itemH,
+    canvas, dayKey, items, itemH, sheets,
     label: DAY_NAMES[dayKey] + ' · ' + (day.name || '训练'),
     count: items.length
   };
@@ -498,8 +517,8 @@ function updateExportButtons() {
   const tip = document.getElementById('exportTip');
   if (tip) {
     tip.textContent = !n ? '' : gif
-      ? '1080px ·  GIF 动图 · 一天一张'
-      : '1080px · PNG 图片 · 一天一张';
+      ? '1080px · 动作大图 · GIF 动图 · 一天一张'
+      : '1080px · 动作大图 · PNG 图片 · 一天一张';
   }
 }
 

@@ -3,8 +3,10 @@ _*.js
 _*.py
 _*.html
 _*.png
+_*.gif
 _*.json
 *.log
+audit_shots/
 
 # 依赖
 node_modules/
