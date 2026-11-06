@@ -29,11 +29,13 @@ cd FitForge
 
 ## 部署到 Vercel
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/soberbw-hash/FitForge)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/soberbw-hash/FitForge&project-name=fitforge-site&repository-name=fitforge-site)
 
 **推荐**：在 [Vercel 控制台](https://vercel.com/new) 选 **Add New → Project → Import Git Repository → `soberbw-hash/FitForge` → Deploy**，授权 GitHub 后其余保持默认即可（纯静态、Framework 选 `Other`、无需构建命令）。之后每次 `git push` 到 `main` 会自动重新部署。
 
-也可以直接点上方的 **Deploy with Vercel** 按钮，它会把公开仓库复制到你自己账号下再部署。
+也可以直接点上方的 **Deploy with Vercel** 按钮，它会把公开仓库复制到你自己账号下再部署。注意 **Private Repository Name 只能填小写字母、数字、`.` `_` `-`**，填 `FitForge` 这种带大写的会报 `A Project name can only contain up to 100 lowercase letters...`；而且副本不能跟已存在的仓库同名，按钮已预设为 `fitforge-site`。这样部署的是副本，源仓库后续更新不会自动同步。
+
+**不想建副本**：在这个页面底部点 **Import a different Git Repository →**，直接选 `soberbw-hash/FitForge` 即可，跳过仓库命名这一步。
 
 几个已经配好的点：
 
