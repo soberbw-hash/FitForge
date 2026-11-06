@@ -37,6 +37,12 @@ cd FitForge
 |---|---|
 | ![导出](docs/screenshot-export.png) | ![概览](docs/screenshot-stats.png) |
 
+| 肌肉地图（灰白解剖线描，点肌群橙红高亮） |
+|---|
+| ![肌肉地图](docs/screenshot-musclemap.png) |
+
+> 人体图采用与动作 GIF 一致的灰白写实解剖线描风格，正面 / 背面共覆盖 15 个可点肌群；点右侧列表也会同步高亮，选到只存在于背面的肌群会自动翻面。
+
 ## 快捷键
 
 | 按键 | 作用 |
@@ -66,7 +72,7 @@ FitForge/
 ├── anim_frames.json     # GIF 抽帧动画数据（构建产物）
 ├── templates.js         # 18 套计划模板定义
 ├── translate.js         # 动作名规则式中文翻译引擎
-├── body_svg.js          # 人体肌群分区图
+├── body_svg.js          # Gym Visual 风格解剖人体肌群图（正/背面，15 个可点分区）
 ├── build_*.js           # 数据 / 增强 / 缩略图 / 打包构建脚本
 ├── build_anim.py        # GIF 抽帧脚本（需 Pillow）
 └── docs/                # 调研报告与截图

@@ -47,6 +47,11 @@
   --mono: 'SF Mono','JetBrains Mono',Consolas,monospace;
 
   --top-h: 58px;
+
+  /* 解剖人体图（跟随主题） */
+  --bs1: #CBC2B3;  --bs2: #EFEBE3;  --bs3: #FFFFFF;
+  --bl:  #968B7B;
+  --bm1: #EDE4D8;  --bm2: #D2C3B0;  --bml: #A89A86;  --bf: #9A8B78;
 }
 
 [data-theme="dark"] {
@@ -74,6 +79,11 @@
   --sh-1: 0 1px 2px rgba(0,0,0,.4);
   --sh-2: 0 2px 12px rgba(0,0,0,.45);
   --sh-3: 0 14px 40px rgba(0,0,0,.6);
+
+  /* 解剖人体图（暗色）：比卡片底色亮一档，保证线描清晰 */
+  --bs1: #3B3933;  --bs2: #575349;  --bs3: #6B6559;
+  --bl:  #8C8475;
+  --bm1: #625C51;  --bm2: #4C483F;  --bml: #8E8676;  --bf: #918877;
 }
 
 /* ─── Reset ─── */
@@ -405,6 +415,7 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
 }
 .overlay.on { opacity: 1; visibility: visible; }
 .modal {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-xl);
@@ -424,20 +435,27 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
 .modal-date { font-size: 12.5px; color: var(--t3); font-weight: 400; }
 .modal-body { padding: 18px 24px 24px; }
 .modal-foot {
-  display: flex; gap: 8px;
+  display: flex; gap: 8px; flex-wrap: wrap;
   padding: 14px 24px;
   border-top: 1px solid var(--line);
-  position: sticky; bottom: 0;
+  position: sticky; bottom: 0; z-index: 5;
   background: var(--surface);
 }
+/* 底部操作条常驻，内容留出空间避免被盖 */
+#detailBody { padding-bottom: 70px; }
+.modal-close-btn { margin-left: auto; color: var(--t3); }
 .modal-x {
-  position: absolute; top: 14px; right: 14px;
-  width: 30px; height: 30px; border-radius: var(--r-sm);
+  position: absolute; top: 12px; right: 12px; z-index: 20;
+  width: 36px; height: 36px; border-radius: 50%;
   display: grid; place-items: center;
-  color: var(--t3);
+  color: var(--t2);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
   transition: all var(--t-fast);
 }
-.modal-x:hover { background: var(--surface-3); color: var(--t1); }
+.modal-x:hover { background: var(--accent); border-color: var(--accent); color: #fff; transform: rotate(90deg); }
+.modal-x .ic { width: 17px; height: 17px; }
 .hint { font-size: 12.5px; color: var(--t3); margin-bottom: 12px; }
 
 /* ─── Detail layout ─── */
@@ -618,7 +636,7 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
 .rest-note { text-align: center; padding: 22px 0; color: var(--t4); font-size: 11.5px; }
 
 /* ═══ MUSCLE MAP ═══ */
-.map-wrap { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+.map-wrap { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; max-width: 1080px; margin-inline: auto; }
 .panel {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -633,19 +651,28 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
   transition: all var(--t-fast);
 }
 .seg-btn.on { background: var(--surface); color: var(--t1); box-shadow: var(--sh-1); }
-.body-holder { width: 100%; display: grid; place-items: center; }
-.body-svg { width: 100%; max-width: 300px; height: auto; }
-.body-silhouette { fill: var(--surface-3); stroke: var(--line-2); stroke-width: 1.2; }
-.body-part { fill: var(--surface-3); }
-.body-line { fill: none; stroke: var(--line-2); stroke-width: 1.4; }
+.body-holder {
+  width: 100%; max-width: 420px; margin-inline: auto;
+  display: grid; place-items: center;
+  background: var(--surface-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 10px 8px;
+}
+.body-svg { width: 100%; max-width: 380px; height: auto; display: block; }
+.body-silhouette { fill: url(#ffSkin); stroke: var(--bl); stroke-width: 1.1; stroke-linejoin: round; }
+.body-line { fill: none; stroke: var(--bl); stroke-width: .9; opacity: .75; stroke-linecap: round; }
+.body-fiber { fill: none; stroke: var(--bf); stroke-width: .8; opacity: .8; stroke-linecap: round; }
 .muscle {
   cursor: pointer;
-  transition: opacity .2s var(--ease), transform .2s var(--ease);
-  opacity: .78;
-  transform-origin: center;
+  fill: url(#ffMus);
+  stroke: var(--bml);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  transition: fill .18s var(--ease), stroke .18s var(--ease);
 }
-.muscle:hover { opacity: 1; transform: scale(1.05); }
-.muscle.on { opacity: 1; }
+.muscle:hover { fill: #F4B79E; stroke: #DE8768; }
+.muscle.on { fill: url(#ffOn); stroke: #B83417; stroke-width: 1.3; }
 
 .map-info { padding: 22px; position: sticky; top: calc(var(--top-h) + 20px); }
 .map-info h2 { font-size: 18px; font-weight: 670; }
@@ -1349,9 +1376,9 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
 .chart-sub { font-size: 11px; font-weight: 400; color: var(--t4); margin-left: 6px; }
 .chart-foot { font-size: 11.5px; color: var(--t3); margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); }
 
-/* 肌肉地图：人体放大一点，给可点提示 */
-.body-svg { max-width: 410px; }
-.map-hint { font-size: 11px; color: var(--t4); margin-top: -4px; }
+/* 肌肉地图：解剖图放大一点 */
+.body-svg { max-width: 380px; }
+.map-hint { font-size: 11px; color: var(--t4); margin-top: 8px; }
 
 /* 跟练要领默认展开后保持紧凑 */
 .ss-steps[open] ol { margin: 8px 0 2px; padding-left: 18px; }

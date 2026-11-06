@@ -55,6 +55,11 @@
   --mono: 'SF Mono','JetBrains Mono',Consolas,monospace;
 
   --top-h: 58px;
+
+  /* 解剖人体图（跟随主题） */
+  --bs1: #CBC2B3;  --bs2: #EFEBE3;  --bs3: #FFFFFF;
+  --bl:  #968B7B;
+  --bm1: #EDE4D8;  --bm2: #D2C3B0;  --bml: #A89A86;  --bf: #9A8B78;
 }
 
 [data-theme="dark"] {
@@ -82,6 +87,11 @@
   --sh-1: 0 1px 2px rgba(0,0,0,.4);
   --sh-2: 0 2px 12px rgba(0,0,0,.45);
   --sh-3: 0 14px 40px rgba(0,0,0,.6);
+
+  /* 解剖人体图（暗色）：比卡片底色亮一档，保证线描清晰 */
+  --bs1: #3B3933;  --bs2: #575349;  --bs3: #6B6559;
+  --bl:  #8C8475;
+  --bm1: #625C51;  --bm2: #4C483F;  --bml: #8E8676;  --bf: #918877;
 }
 
 /* ─── Reset ─── */
@@ -413,6 +423,7 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
 }
 .overlay.on { opacity: 1; visibility: visible; }
 .modal {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-xl);
@@ -432,20 +443,27 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
 .modal-date { font-size: 12.5px; color: var(--t3); font-weight: 400; }
 .modal-body { padding: 18px 24px 24px; }
 .modal-foot {
-  display: flex; gap: 8px;
+  display: flex; gap: 8px; flex-wrap: wrap;
   padding: 14px 24px;
   border-top: 1px solid var(--line);
-  position: sticky; bottom: 0;
+  position: sticky; bottom: 0; z-index: 5;
   background: var(--surface);
 }
+/* 底部操作条常驻，内容留出空间避免被盖 */
+#detailBody { padding-bottom: 70px; }
+.modal-close-btn { margin-left: auto; color: var(--t3); }
 .modal-x {
-  position: absolute; top: 14px; right: 14px;
-  width: 30px; height: 30px; border-radius: var(--r-sm);
+  position: absolute; top: 12px; right: 12px; z-index: 20;
+  width: 36px; height: 36px; border-radius: 50%;
   display: grid; place-items: center;
-  color: var(--t3);
+  color: var(--t2);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
   transition: all var(--t-fast);
 }
-.modal-x:hover { background: var(--surface-3); color: var(--t1); }
+.modal-x:hover { background: var(--accent); border-color: var(--accent); color: #fff; transform: rotate(90deg); }
+.modal-x .ic { width: 17px; height: 17px; }
 .hint { font-size: 12.5px; color: var(--t3); margin-bottom: 12px; }
 
 /* ─── Detail layout ─── */
@@ -626,7 +644,7 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
 .rest-note { text-align: center; padding: 22px 0; color: var(--t4); font-size: 11.5px; }
 
 /* ═══ MUSCLE MAP ═══ */
-.map-wrap { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+.map-wrap { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; max-width: 1080px; margin-inline: auto; }
 .panel {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -641,19 +659,28 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
   transition: all var(--t-fast);
 }
 .seg-btn.on { background: var(--surface); color: var(--t1); box-shadow: var(--sh-1); }
-.body-holder { width: 100%; display: grid; place-items: center; }
-.body-svg { width: 100%; max-width: 300px; height: auto; }
-.body-silhouette { fill: var(--surface-3); stroke: var(--line-2); stroke-width: 1.2; }
-.body-part { fill: var(--surface-3); }
-.body-line { fill: none; stroke: var(--line-2); stroke-width: 1.4; }
+.body-holder {
+  width: 100%; max-width: 420px; margin-inline: auto;
+  display: grid; place-items: center;
+  background: var(--surface-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 10px 8px;
+}
+.body-svg { width: 100%; max-width: 380px; height: auto; display: block; }
+.body-silhouette { fill: url(#ffSkin); stroke: var(--bl); stroke-width: 1.1; stroke-linejoin: round; }
+.body-line { fill: none; stroke: var(--bl); stroke-width: .9; opacity: .75; stroke-linecap: round; }
+.body-fiber { fill: none; stroke: var(--bf); stroke-width: .8; opacity: .8; stroke-linecap: round; }
 .muscle {
   cursor: pointer;
-  transition: opacity .2s var(--ease), transform .2s var(--ease);
-  opacity: .78;
-  transform-origin: center;
+  fill: url(#ffMus);
+  stroke: var(--bml);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  transition: fill .18s var(--ease), stroke .18s var(--ease);
 }
-.muscle:hover { opacity: 1; transform: scale(1.05); }
-.muscle.on { opacity: 1; }
+.muscle:hover { fill: #F4B79E; stroke: #DE8768; }
+.muscle.on { fill: url(#ffOn); stroke: #B83417; stroke-width: 1.3; }
 
 .map-info { padding: 22px; position: sticky; top: calc(var(--top-h) + 20px); }
 .map-info h2 { font-size: 18px; font-weight: 670; }
@@ -1357,9 +1384,9 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
 .chart-sub { font-size: 11px; font-weight: 400; color: var(--t4); margin-left: 6px; }
 .chart-foot { font-size: 11.5px; color: var(--t3); margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); }
 
-/* 肌肉地图：人体放大一点，给可点提示 */
-.body-svg { max-width: 410px; }
-.map-hint { font-size: 11px; color: var(--t4); margin-top: -4px; }
+/* 肌肉地图：解剖图放大一点 */
+.body-svg { max-width: 380px; }
+.map-hint { font-size: 11px; color: var(--t4); margin-top: 8px; }
 
 /* 跟练要领默认展开后保持紧凑 */
 .ss-steps[open] ol { margin: 8px 0 2px; padding-left: 18px; }
@@ -1547,7 +1574,7 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
           <button class="seg-btn" data-v="back" onclick="showBodyView('back')">背面</button>
         </div>
         <div id="bodySvgContainer" class="body-holder"></div>
-        <div class="map-hint">有颜色的部位都能点</div>
+        <div class="map-hint">点肌肉高亮 · 右侧看对应动作</div>
       </div>
       <div class="panel map-info">
         <h2 id="muscleName">肌群速览</h2>
@@ -2267,6 +2294,231 @@ const EXERCISE_EXTRA = {"1000":{"t":"小腿三头肌","s":["腘绳肌","臀部"]
 
 </script>
 <script>
+/* ─── Gym Visual 风格解剖人体肌群图 ───
+ * 与动作库 GIF 同一套视觉语言：灰白写实线描 + 肌肉纹理 + 橙红高亮
+ * 正/背两面，15 个肌群分区可点击；左右对称部位用镜像复用
+ * viewBox 360 × 640
+ */
+
+const BODY_SVG = (() => {
+  const W = 360;
+  const mirror = s => `<g transform="translate(${W},0) scale(-1,1)">${s}</g>`;
+
+  /* 每张图各自的渐变定义（一次只渲染一张，id 不冲突） */
+  const defs = `<defs>
+    <linearGradient id="ffSkin" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" style="stop-color:var(--bs1)"/>
+      <stop offset=".22" style="stop-color:var(--bs2)"/>
+      <stop offset=".5" style="stop-color:var(--bs3)"/>
+      <stop offset=".78" style="stop-color:var(--bs2)"/>
+      <stop offset="1" style="stop-color:var(--bs1)"/>
+    </linearGradient>
+    <linearGradient id="ffMus" x1="0" y1="0" x2=".35" y2="1">
+      <stop offset="0" style="stop-color:var(--bm1)"/>
+      <stop offset="1" style="stop-color:var(--bm2)"/>
+    </linearGradient>
+    <linearGradient id="ffOn" x1="0" y1="0" x2=".3" y2="1">
+      <stop offset="0" stop-color="#F7885F"/>
+      <stop offset=".55" stop-color="#E8502E"/>
+      <stop offset="1" stop-color="#CF3D1C"/>
+    </linearGradient>
+    <radialGradient id="ffHead" cx=".38" cy=".32" r=".75">
+      <stop offset="0" style="stop-color:var(--bs3)"/>
+      <stop offset="1" style="stop-color:var(--bs1)"/>
+    </radialGradient>
+  </defs>`;
+
+  /* 绘制样式内嵌：外部 CSS 里的 url(#渐变) 在部分场景会解析失效 */
+  const style = `<style>
+    .body-silhouette { fill: url(#ffSkin); stroke: var(--bl); stroke-width: 1.1; stroke-linejoin: round; }
+    .body-line { fill: none; stroke: var(--bl); stroke-width: .9; opacity: .75; stroke-linecap: round; }
+    .body-fiber { fill: none; stroke: var(--bf); stroke-width: .8; opacity: .8; stroke-linecap: round; }
+    .muscle { cursor: pointer; fill: url(#ffMus); stroke: var(--bml); stroke-width: 1; stroke-linejoin: round; }
+    .muscle:hover { fill: #F4B79E; stroke: #DE8768; }
+    .muscle.on { fill: url(#ffOn); stroke: #B83417; stroke-width: 1.3; }
+  </style>`;
+
+  /* ── 人体轮廓：分部件绘制，重叠处形成解剖分节线 ── */
+  const earL = `<path d="M154,47 C149,46 147,52 149,60 C150,65 154,66 155,62 Z"/>`;
+  const head = `
+    <path d="M180,18 C195,18 206,30 206,46 C206,57 203,65 199,72
+             C197,78 197,83 198,88 L188,94 C184,97 176,97 172,94 L162,88
+             C163,83 163,78 161,72 C157,65 154,57 154,46 C154,30 165,18 180,18 Z"
+          fill="url(#ffHead)"/>
+    ${earL}${mirror(earL)}
+    <path style="fill:var(--bs1);opacity:.42" d="M156,45 C157,28 167,19 180,19
+      C194,19 204,29 204,45 C199,38 191,34 180,34 C169,34 161,38 156,45 Z"/>
+    <path d="M163,102 C168,108 192,108 197,102 L196,110 C190,116 170,116 164,110 Z" opacity=".55"/>`;
+
+  const neck = `<path d="M166,86 L194,86 L197,105 C190,111 170,111 163,105 Z"/>`;
+
+  const torso = `<path d="M163,104
+    C149,108 131,113 119,124 C109,133 106,147 108,163
+    C110,183 116,202 122,220 C127,237 132,253 135,269
+    C137,285 138,299 139,313 C147,321 213,321 221,313
+    C222,299 223,285 225,269 C228,253 233,237 238,220
+    C244,202 250,183 252,163 C254,147 251,133 241,124
+    C229,113 211,108 197,104 C190,110 170,110 163,104 Z"/>`;
+
+  const armL = `
+    <path d="M119,124 C107,128 100,140 98,156 C95,176 96,200 100,222
+             C102,232 109,236 116,232 C123,228 126,218 127,206
+             L129,164 C130,146 127,130 119,124 Z"/>
+    <path d="M100,222 C94,226 90,236 88,250 C85,272 83,298 84,320
+             C85,330 91,334 98,331 C105,328 108,318 109,306
+             L113,260 C115,242 108,224 100,222 Z"/>
+    <path d="M84,320 C79,324 77,336 76,350 C75,364 77,378 81,386
+             C85,391 91,388 94,381 L101,350 C103,336 93,316 84,320 Z"/>`;
+
+  const legL = `
+    <path d="M139,313 C132,323 128,341 127,363 C125,389 128,415 132,439
+             C135,451 145,455 154,450 C163,445 167,431 169,415
+             L175,353 C177,333 159,311 147,311 Z"/>
+    <path d="M132,439 C126,447 124,463 126,483 C128,507 132,533 136,555
+             C138,565 147,567 154,561 C161,555 163,541 163,525
+             L167,479 C169,459 149,435 132,439 Z"/>
+    <path d="M136,555 C131,563 127,575 125,587 C123,595 129,599 139,599
+             L163,599 C169,599 169,591 165,583 C161,573 155,561 151,555 Z"/>`;
+
+  const silhouette = `<g class="body-silhouette">
+    ${head}${neck}${torso}${armL}${legL}${mirror(armL + legL)}
+  </g>`;
+
+  /* ── 解剖细节线：锁骨、胸骨、腹白线、髂嵴、关节、五官、手指脚趾 ── */
+  const detailL = `
+    <path d="M150,119 Q180,112 210,119"/>
+    <path d="M180,140 L180,192" stroke-dasharray="3 3"/>
+    <path d="M139,292 Q180,306 221,292"/>
+    <path d="M132,440 Q146,447 162,440"/>
+    <path d="M98,232 Q108,236 118,232"/>
+    <path d="M86,328 Q94,332 102,328"/>
+    <path d="M78,356 L80,378 M84,358 L86,380 M90,356 L92,376"/>
+    <path d="M132,584 Q145,588 160,584"/>`;
+
+  /* 五官只是极淡的示意，避免简笔笑脸的廉价感 */
+  const faceL = `
+    <path d="M164,47 Q171,44 177,47"/>
+    <path d="M164,54 Q170,57 176,54"/>
+    <path d="M180,52 L179,64"/>
+    <path d="M173,76 Q180,78 187,76"/>
+    <path d="M160,28 Q180,20 200,28"/>`;
+
+  const anatomy = `<g class="body-line" pointer-events="none">
+    ${detailL}${mirror(detailL)}
+    <path d="M180,196 L180,280" stroke-dasharray="2 4" opacity=".7"/>
+  </g>
+  <g class="body-line" opacity=".34" pointer-events="none">${faceL}${mirror(faceL)}</g>`;
+
+  /* ── 正面肌肉分区 ── */
+  const mFrontL = `
+    <path class="muscle" data-muscle="shoulders" d="M119,124 C107,128 100,140 98,156
+      C97,168 99,180 103,188 C111,184 119,176 123,164 C127,150 127,134 119,124 Z"/>
+    <path class="muscle" data-muscle="chest" d="M153,127 C164,123 176,126 180,137
+      L180,184 C169,191 155,188 149,175 C144,163 145,137 153,127 Z"/>
+    <path class="muscle" data-muscle="biceps" d="M103,158 C112,156 120,162 122,174
+      L120,210 C118,222 108,224 104,214 L99,178 C98,168 99,160 103,158 Z"/>
+    <path class="muscle" data-muscle="forearms" d="M91,238 C100,234 108,240 110,252
+      L106,308 C104,320 94,322 90,312 L86,260 C85,248 87,240 91,238 Z"/>
+    <path class="muscle" data-muscle="obliques" d="M138,192 C148,190 155,194 158,202
+      L156,266 C146,262 138,250 135,232 C132,216 133,200 138,192 Z"/>
+    <g class="muscle" data-muscle="quadriceps">
+      <path d="M143,320 C150,316 157,319 160,332 L159,406
+               C158,424 150,430 145,422 C138,408 136,340 143,320 Z"/>
+      <path d="M162,323 C166,327 168,333 168,340 L166,404
+               C165,420 158,427 153,422 C150,402 157,336 162,323 Z"/>
+    </g>
+    <g class="muscle" data-muscle="calves">
+      <path d="M137,458 C144,454 150,459 151,474 L150,528
+               C149,544 141,548 137,536 C132,520 132,472 137,458 Z"/>
+      <path d="M153,460 C158,458 161,466 161,478 L159,528
+               C158,542 152,546 149,536 C146,520 150,472 153,460 Z"/>
+    </g>`;
+
+  const absSix = `<g class="muscle" data-muscle="abs">
+    <path d="M158,196 L179,196 L179,217 L159,217 Z"/>
+    <path d="M181,196 L202,196 L201,217 L181,217 Z"/>
+    <path d="M159,220 L179,220 L179,241 L160,241 Z"/>
+    <path d="M181,220 L201,220 L200,241 L181,241 Z"/>
+    <path d="M160,244 L179,244 L179,272 L162,272 Z"/>
+    <path d="M181,244 L200,244 L198,272 L181,272 Z"/>
+  </g>`;
+
+  const trapsFront = `<path class="muscle" data-muscle="traps"
+    d="M163,103 C171,109 189,109 197,103 L207,121 C193,115 167,115 153,121 Z"/>`;
+
+  const frontMuscles = `<g class="muscles">
+    ${trapsFront}${mFrontL}${mirror(mFrontL)}${absSix}
+  </g>`;
+
+  /* ── 背面肌肉分区 ── */
+  const mBackL = `
+    <path class="muscle" data-muscle="shoulders" d="M119,124 C107,128 100,140 98,156
+      C97,168 99,180 103,188 C111,184 119,176 123,164 C127,150 127,134 119,124 Z"/>
+    <path class="muscle" data-muscle="back" d="M150,148 C162,144 174,150 178,161
+      L176,196 C162,192 150,182 146,167 C144,158 146,151 150,148 Z"/>
+    <path class="muscle" data-muscle="lats" d="M128,158 C140,152 152,162 156,180
+      L158,246 C148,252 138,240 132,220 C126,200 124,170 128,158 Z"/>
+    <path class="muscle" data-muscle="triceps" d="M103,156 C112,154 120,160 122,172
+      L120,214 C118,226 108,228 104,218 L99,178 C98,166 99,158 103,156 Z"/>
+    <path class="muscle" data-muscle="forearms" d="M91,238 C100,234 108,240 110,252
+      L106,308 C104,320 94,322 90,312 L86,260 C85,248 87,240 91,238 Z"/>
+    <path class="muscle" data-muscle="glutes" d="M142,290 C154,284 170,290 176,304
+      C180,316 176,332 164,338 C150,342 140,332 138,316 C136,304 138,294 142,290 Z"/>
+    <g class="muscle" data-muscle="hamstrings">
+      <path d="M143,340 C150,336 157,340 160,352 L159,412
+               C158,428 150,434 145,425 C138,411 136,354 143,340 Z"/>
+      <path d="M162,343 C166,347 168,353 168,360 L166,412
+               C165,428 158,434 153,428 C150,408 157,354 162,343 Z"/>
+    </g>
+    <g class="muscle" data-muscle="calves">
+      <path d="M137,458 C144,454 150,459 151,474 L150,528
+               C149,544 141,548 137,536 C132,520 132,472 137,458 Z"/>
+      <path d="M153,460 C158,458 161,466 161,478 L159,528
+               C158,542 152,546 149,536 C146,520 150,472 153,460 Z"/>
+    </g>`;
+
+  const trapsBack = `<path class="muscle" data-muscle="traps"
+    d="M180,105 L213,118 L197,170 L180,190 L163,170 L147,118 Z"/>`;
+  const lowerBack = `<g class="muscle" data-muscle="lower_back">
+    <path d="M169,196 L178,196 L178,280 L171,280 Z"/>
+    <path d="M182,196 L191,196 L189,280 L182,280 Z"/>
+  </g>`;
+
+  const backMuscles = `<g class="muscles">
+    ${trapsBack}${mBackL}${mirror(mBackL)}${lowerBack}
+  </g>`;
+
+  /* ── 肌纤维纹理：顺肌束走向的细线，模拟解剖图质感 ── */
+  const fiberL = `
+    <path d="M150,134 Q160,142 170,138 M148,148 Q158,157 169,152 M147,162 Q157,171 168,166"/>
+    <path d="M103,132 Q109,144 112,156 M100,144 Q106,157 109,169"/>
+    <path d="M106,172 Q111,190 109,206"/>
+    <path d="M92,254 Q95,280 94,304 M100,252 Q103,278 102,300"/>
+    <path d="M141,210 Q140,234 143,254 M148,206 Q146,232 149,256"/>
+    <path d="M148,338 Q146,378 149,412 M156,334 Q155,376 157,410"/>
+    <path d="M141,474 Q140,504 143,530 M150,470 Q150,502 152,528"/>
+    <path d="M146,300 Q158,306 170,300"/>
+    <path d="M152,166 Q148,186 152,206 M144,168 Q140,188 143,208"/>`;
+
+  const fibers = `<g class="body-fiber" pointer-events="none">${fiberL}${mirror(fiberL)}</g>`;
+
+  const svg = (muscles, extraLines) => `<svg viewBox="0 0 ${W} 640" class="body-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="人体肌群分区图">
+    ${defs}${style}
+    ${silhouette}
+    ${anatomy}
+    ${muscles}
+    ${fibers}
+    ${extraLines || ''}
+  </svg>`;
+
+  return {
+    front: svg(frontMuscles),
+    back: svg(backMuscles, `<g class="body-line" pointer-events="none"><path d="M180,118 L180,190" stroke-dasharray="3 4" opacity=".6"/></g>`)
+  };
+})();
+
+</script>
+<script>
 /* ═══════════════════════════════════════════
    FitForge — 应用逻辑
    ═══════════════════════════════════════════ */
@@ -2292,110 +2544,7 @@ let state = {
   mechanicFilter: 'all',
 };
 
-const BODY_SVG = {
-  front: `<svg viewBox="0 0 360 620" class="body-svg" xmlns="http://www.w3.org/2000/svg">
-  <g class="body-silhouette">
-    <path d="M180,18 C197,18 210,32 210,49 C210,62 204,73 196,79
-             L200,90 C214,95 232,103 244,114 C256,125 262,140 263,157
-             L265,196 C266,210 262,224 254,234 L246,244
-             C245,266 244,286 244,304 L243,352
-             C250,372 254,398 253,424 C252,446 249,464 246,478
-             L243,506 C243,516 240,524 233,527 C227,529 221,525 220,517
-             L216,478 C214,462 212,444 211,426
-             C203,434 197,446 195,462 L193,516
-             C192,525 187,530 180,530 C173,530 168,525 167,516
-             L165,462 C163,446 157,434 149,426
-             C148,444 146,462 144,478 L140,517
-             C139,525 133,529 127,527 C120,524 117,516 117,506
-             L114,478 C111,464 108,446 107,424 C106,398 110,372 117,352
-             L116,304 C116,286 115,266 114,244
-             C106,234 94,210 95,196 L97,157
-             C98,140 104,125 116,114 C128,103 146,95 160,90
-             L164,79 C156,73 150,62 150,49 C150,32 163,18 180,18 Z"/>
-  </g>
-
-  <g>
-    <!-- 斜方肌 -->
-    <path class="muscle" data-muscle="traps" d="M162,84 C171,79 189,79 198,84 L203,110 C191,101 169,101 157,110 Z" fill="#D9707F"/>
-    <!-- 肩部（三角肌） -->
-    <ellipse class="muscle" data-muscle="shoulders" cx="140" cy="120" rx="30" ry="34" fill="#D9A93E"/>
-    <ellipse class="muscle" data-muscle="shoulders" cx="220" cy="120" rx="30" ry="34" fill="#D9A93E"/>
-    <!-- 胸肌 -->
-    <path class="muscle" data-muscle="chest" d="M154,98 C166,91 177,96 180,101 L180,150 C164,155 153,145 149,127 C146,114 148,102 154,98 Z" fill="#D4574E"/>
-    <path class="muscle" data-muscle="chest" d="M206,98 C194,91 183,96 180,101 L180,150 C196,155 207,145 211,127 C214,114 212,102 206,98 Z" fill="#D4574E"/>
-    <!-- 肱二头肌 -->
-    <path class="muscle" data-muscle="biceps" d="M121,142 C131,140 138,147 138,161 L136,202 C134,216 122,218 117,206 L111,166 C110,152 115,143 121,142 Z" fill="#6FA85C"/>
-    <path class="muscle" data-muscle="biceps" d="M239,142 C229,140 222,147 222,161 L224,202 C226,216 238,218 243,206 L249,166 C250,152 245,143 239,142 Z" fill="#6FA85C"/>
-    <!-- 前臂 -->
-    <path class="muscle" data-muscle="forearms" d="M113,210 C120,207 127,212 128,222 L129,258 C129,271 120,275 114,265 L106,226 C105,217 108,211 113,210 Z" fill="#559FB0"/>
-    <path class="muscle" data-muscle="forearms" d="M247,210 C240,207 233,212 232,222 L231,258 C231,271 240,275 246,265 L254,226 C255,217 252,211 247,210 Z" fill="#559FB0"/>
-    <!-- 腹直肌 -->
-    <rect class="muscle" data-muscle="abs" x="160" y="150" width="40" height="108" rx="11" fill="#5D89C4"/>
-    <!-- 腹斜肌 -->
-    <path class="muscle" data-muscle="obliques" d="M138,150 C149,147 156,152 158,160 L157,252 C147,248 140,238 136,222 C132,204 132,166 138,150 Z" fill="#7B76BE"/>
-    <path class="muscle" data-muscle="obliques" d="M222,150 C211,147 204,152 202,160 L203,252 C213,248 220,238 224,222 C228,204 228,166 222,150 Z" fill="#7B76BE"/>
-    <!-- 股四头肌 -->
-    <path class="muscle" data-muscle="quadriceps" d="M147,266 C159,261 169,268 170,282 L167,346 C166,362 155,366 148,354 C142,340 141,292 147,266 Z" fill="#8C7CC4"/>
-    <path class="muscle" data-muscle="quadriceps" d="M213,266 C201,261 191,268 190,282 L193,346 C194,362 205,366 212,354 C218,340 219,292 213,266 Z" fill="#8C7CC4"/>
-    <!-- 小腿 -->
-    <path class="muscle" data-muscle="calves" d="M148,374 C157,369 165,376 166,388 L165,440 C164,454 153,457 147,446 C142,432 143,392 148,374 Z" fill="#CE6A94"/>
-    <path class="muscle" data-muscle="calves" d="M212,374 C203,369 195,376 194,388 L195,440 C196,454 207,457 213,446 C218,432 217,392 212,374 Z" fill="#CE6A94"/>
-  </g>
-</svg>`,
-
-  back: `<svg viewBox="0 0 360 620" class="body-svg" xmlns="http://www.w3.org/2000/svg">
-  <g class="body-silhouette">
-    <path d="M180,18 C197,18 210,32 210,49 C210,62 204,73 196,79
-             L200,90 C214,95 232,103 244,114 C256,125 262,140 263,157
-             L265,196 C266,210 262,224 254,234 L246,244
-             C245,266 244,286 244,304 L243,352
-             C250,372 254,398 253,424 C252,446 249,464 246,478
-             L243,506 C243,516 240,524 233,527 C227,529 221,525 220,517
-             L216,478 C214,462 212,444 211,426
-             C203,434 197,446 195,462 L193,516
-             C192,525 187,530 180,530 C173,530 168,525 167,516
-             L165,462 C163,446 157,434 149,426
-             C148,444 146,462 144,478 L140,517
-             C139,525 133,529 127,527 C120,524 117,516 117,506
-             L114,478 C111,464 108,446 107,424 C106,398 110,372 117,352
-             L116,304 C116,286 115,266 114,244
-             C106,234 94,210 95,196 L97,157
-             C98,140 104,125 116,114 C128,103 146,95 160,90
-             L164,79 C156,73 150,62 150,49 C150,32 163,18 180,18 Z"/>
-  </g>
-
-  <g>
-    <!-- 斜方肌 -->
-    <path class="muscle" data-muscle="traps" d="M158,86 C168,77 192,77 202,86 L208,122 C194,111 166,111 152,122 Z" fill="#D9707F"/>
-    <!-- 肩部 -->
-    <ellipse class="muscle" data-muscle="shoulders" cx="138" cy="122" rx="30" ry="34" fill="#D9A93E"/>
-    <ellipse class="muscle" data-muscle="shoulders" cx="222" cy="122" rx="30" ry="34" fill="#D9A93E"/>
-    <!-- 背阔肌 -->
-    <path class="muscle" data-muscle="lats" d="M152,112 C165,105 175,109 177,120 L176,198 C171,212 159,218 150,213 C141,202 142,136 152,112 Z" fill="#DE9155"/>
-    <path class="muscle" data-muscle="lats" d="M208,112 C195,105 185,109 183,120 L184,198 C189,212 201,218 210,213 C219,202 218,136 208,112 Z" fill="#DE9155"/>
-    <!-- 三角肌后束 -->
-    <ellipse class="muscle" data-muscle="shoulders" cx="118" cy="148" rx="21" ry="25" fill="#D9A93E"/>
-    <ellipse class="muscle" data-muscle="shoulders" cx="242" cy="148" rx="21" ry="25" fill="#D9A93E"/>
-    <!-- 肱三头肌 -->
-    <path class="muscle" data-muscle="triceps" d="M120,150 C130,148 137,155 137,169 L135,204 C133,218 121,220 116,208 L110,170 C109,157 114,151 120,150 Z" fill="#43A294"/>
-    <path class="muscle" data-muscle="triceps" d="M240,150 C230,148 223,155 223,169 L225,204 C227,218 239,220 244,208 L250,170 C251,157 246,151 240,150 Z" fill="#43A294"/>
-    <!-- 前臂 -->
-    <path class="muscle" data-muscle="forearms" d="M111,212 C118,209 125,214 126,224 L127,260 C127,273 118,277 112,267 L104,228 C103,219 106,213 111,212 Z" fill="#559FB0"/>
-    <path class="muscle" data-muscle="forearms" d="M249,212 C242,209 235,214 234,224 L233,260 C233,273 242,277 248,267 L256,228 C257,219 254,213 249,212 Z" fill="#559FB0"/>
-    <!-- 下背 -->
-    <rect class="muscle" data-muscle="lower_back" x="161" y="198" width="38" height="76" rx="10" fill="#C9A03F"/>
-    <!-- 臀部 -->
-    <ellipse class="muscle" data-muscle="glutes" cx="161" cy="294" rx="31" ry="28" fill="#BE63B4"/>
-    <ellipse class="muscle" data-muscle="glutes" cx="199" cy="294" rx="31" ry="28" fill="#BE63B4"/>
-    <!-- 腘绳肌 -->
-    <path class="muscle" data-muscle="hamstrings" d="M147,302 C159,297 169,304 170,318 L167,370 C166,386 155,390 148,378 C142,364 141,316 147,302 Z" fill="#9E70C4"/>
-    <path class="muscle" data-muscle="hamstrings" d="M213,302 C201,297 191,304 190,318 L193,370 C194,386 205,390 212,378 C218,364 219,316 213,302 Z" fill="#9E70C4"/>
-    <!-- 小腿 -->
-    <path class="muscle" data-muscle="calves" d="M148,388 C157,383 165,390 166,402 L165,448 C164,462 153,465 147,454 C142,440 143,404 148,388 Z" fill="#CE6A94"/>
-    <path class="muscle" data-muscle="calves" d="M212,388 C203,383 195,390 194,402 L195,448 C196,462 207,465 213,454 C218,440 217,404 212,388 Z" fill="#CE6A94"/>
-  </g>
-</svg>`
-};
+/* 人体肌群图由 body_svg.js 提供（BODY_SVG） */
 
 /* ─── Storage ─── */
 function _get(k, d) {
@@ -2741,6 +2890,7 @@ function showDetail(id) {
   document.getElementById('detailActions').innerHTML = `
     <button class="btn btn-solid" onclick="addToPlanFromDetail('${ex.id}')">${ic('plus')}加入周计划</button>
     <button class="btn btn-soft" onclick="startRestTimer(${ex.restSec})">${ic('clock')}休息计时</button>
+    <button class="btn btn-ghost modal-close-btn" onclick="closeModal('detailModal')">关闭</button>
   `;
 
   openModal('detailModal');
@@ -3124,12 +3274,13 @@ function renderBodyMap() {
   const c = document.getElementById('bodySvgContainer');
   if (!c) return;
   c.innerHTML = BODY_SVG[state.bodyView];
+  /* 翻面后仍保持当前选中肌群的高亮 */
+  if (state.selectedMuscle) {
+    c.querySelectorAll('.muscle').forEach(x =>
+      x.classList.toggle('on', x.dataset.muscle === state.selectedMuscle));
+  }
   c.querySelectorAll('.muscle').forEach(r => {
-    r.addEventListener('click', () => {
-      c.querySelectorAll('.muscle').forEach(x => x.classList.remove('on'));
-      r.classList.add('on');
-      selectMuscle(r.dataset.muscle);
-    });
+    r.addEventListener('click', () => selectMuscle(r.dataset.muscle));
   });
 }
 
@@ -3158,6 +3309,15 @@ function selectMuscle(key) {
   state.selectedMuscle = key;
   const mg = MUSCLE_GROUPS[key];
   if (!mg) return;
+
+  /* 只存在于背面的肌群：自动翻到背面，避免点了却看不到高亮 */
+  const BACK_ONLY = ['back', 'lats', 'lower_back', 'triceps', 'glutes', 'hamstrings'];
+  if (BACK_ONLY.includes(key) && state.bodyView !== 'back') showBodyView('back');
+
+  /* 图例 / 动作库点进来时，人体图同步高亮 */
+  const c = document.getElementById('bodySvgContainer');
+  if (c) c.querySelectorAll('.muscle').forEach(x =>
+    x.classList.toggle('on', x.dataset.muscle === key));
 
   document.getElementById('muscleName').textContent = mg.name;
   document.getElementById('muscleSub').textContent = '点动作看演示与要领';
@@ -3252,6 +3412,14 @@ function renderStats() {
       ${idle ? `<p class="chart-foot">另有 ${idle} 个肌群本周未安排</p>` : ''}
     </div>`;
 }
+
+/* ─── 点遮罩关闭弹窗（后开先关，跟 Esc 一致） ─── */
+document.addEventListener('click', e => {
+  if (!e.target.classList || !e.target.classList.contains('overlay')) return;
+  const id = e.target.id;
+  if (id === 'sessionModal' && typeof closeSession === 'function') closeSession();
+  else closeModal(id);
+});
 
 /* ─── Keyboard ─── */
 document.addEventListener('keydown', e => {

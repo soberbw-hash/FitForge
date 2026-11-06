@@ -13,6 +13,7 @@ const parts = [
   ['thumbs_data.js', 'GIF 首帧缩略图'],
   ['extra_data.js', '肌肉 / 标签 / 别名增强数据'],
   ['gif_encoder.js', 'GIF 编码器'],
+  ['body_svg.js', '解剖人体肌群图'],
   ['app.js', '应用逻辑'],
   ['export_card.js', '训练卡导出'],
   ['session.js', '引导式跟练'],
