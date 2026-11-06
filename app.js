@@ -225,7 +225,8 @@ function getFiltered() {
   const diff = document.getElementById('diffSelect')?.value || 'all';
   return EXERCISES.filter(ex => {
     if (q && !ex.name.toLowerCase().includes(q) && !(ex.nameEn || '').toLowerCase().includes(q)) return false;
-    if (state.muscleFilter !== 'all' && !ex.primary.includes(state.muscleFilter) && !ex.secondary.includes(state.muscleFilter)) return false;
+    /* 有氧动作在原始库里被标成腹肌，按单一肌群筛选时不混进来 */
+    if (state.muscleFilter !== 'all' && (ex.category === 'cardio' || (!ex.primary.includes(state.muscleFilter) && !ex.secondary.includes(state.muscleFilter)))) return false;
     if (eq !== 'all' && ex.equipment !== eq) return false;
     if (et !== 'all' && equipTypeOf(ex) !== et) return false;
     if (diff !== 'all' && ex.difficulty !== diff) return false;
@@ -256,7 +257,7 @@ function cardHTML(ex, showFav = true) {
       <div class="card-title">${ex.name}</div>
       <div class="card-foot">
         <div class="card-tags">
-          <span class="badge ${diffCls}">${starHTML(ex)}<span>${diffName}</span></span>
+          <span class="badge ${diffCls}" title="难度星级按动作特征本地估算，原始动作库无难度字段">${starHTML(ex)}<span>${diffName}</span></span>
           ${ex.mechanic === 'compound' ? `<span class="badge comp">${ic('flame')}<span>复合</span></span>` : ''}
         </div>
         <div class="card-meta">
@@ -373,7 +374,7 @@ function showDetail(id) {
         <h2>${ex.name}</h2>
         <div class="detail-tags">${tags}</div>
         <div class="detail-rating">
-          <span class="dr-box"><span class="dr-l">难度星级</span>${starHTML(ex)}<b>${diff}</b></span>
+          <span class="dr-box" title="原始动作库无难度字段，星级由本地按动作特征估算"><span class="dr-l">难度星级</span>${starHTML(ex)}<b>${diff}</b></span>
           <span class="dr-box"><span class="dr-l">热门度</span><b class="dr-heat"><span class="heat-lb">热</span>${FFHeat.score(ex)}</b><small>/100</small></span>
         </div>
         <div class="dr-note">按动作本身估算（复合动作 / 基础主项 / 肌群覆盖 / 器械易得度），与你的训练数据无关</div>

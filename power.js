@@ -335,7 +335,8 @@ function searchScore(ex, q) {
   const cats = [
     (EQUIPMENT[ex.equipment] || {}).name,
     (EQUIP_TYPES[equipTypeOf(ex)] || {}).name,
-    PART_ZH[ex.category] || CATEGORY[ex.category]
+    PART_ZH[ex.category] || CATEGORY[ex.category],
+    extra.e || ''   // 原始器械的精确中文名：药球 / 瑞士球 / 战绳 / 额外负重…
   ].filter(Boolean).join(' ').toLowerCase();
   const hay = name + ' ' + en + ' ' + aliases + ' ' + tags + ' ' + cats;
   const parts = q.split(/\s+/).filter(Boolean);
@@ -353,7 +354,7 @@ getFiltered = function () {
   const sort = document.getElementById('sortSelect')?.value || 'default';
   let list = EXERCISES.filter(ex => {
     if (q && !searchScore(ex, q)) return false;
-    if (state.muscleFilter !== 'all' && !ex.primary.includes(state.muscleFilter) && !ex.secondary.includes(state.muscleFilter)) return false;
+    if (state.muscleFilter !== 'all' && (ex.category === 'cardio' || (!ex.primary.includes(state.muscleFilter) && !ex.secondary.includes(state.muscleFilter)))) return false;
     if (eq !== 'all' && ex.equipment !== eq) return false;
     if (et !== 'all' && equipTypeOf(ex) !== et) return false;
     if (diff !== 'all' && ex.difficulty !== diff) return false;
