@@ -344,6 +344,7 @@ function searchScore(ex, q) {
 
 const _origGetFiltered = getFiltered;
 getFiltered = function () {
+  try { FFHeat.sync(); } catch (e) {}
   const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
   const eq = document.getElementById('equipSelect')?.value || 'all';
   const et = document.getElementById('equipTypeSelect')?.value || 'all';
@@ -363,9 +364,18 @@ getFiltered = function () {
     if (tag !== 'all' && !(EXERCISE_EXTRA[ex.id]?.g || []).includes(tag)) return false;
     return true;
   });
+  const heatCmp = (a, b) => (FFHeat.score(b) - FFHeat.score(a)) || a.id.localeCompare(b.id);
   if (sort === 'name') list = list.slice().sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
-  if (sort === 'easy') list = list.slice().sort((a, b) => ({ beginner: 0, intermediate: 1, advanced: 2 }[a.difficulty] || 0) - ({ beginner: 0, intermediate: 1, advanced: 2 }[b.difficulty] || 0));
-  if (sort === 'random') list = list.slice().sort(() => Math.random() - .5);
+  else if (sort === 'random') list = list.slice().sort(() => Math.random() - .5);
+  else if (sort === 'hot') list = list.slice().sort(heatCmp);
+  else if (sort === 'starLow' || sort === 'starHigh' || sort === 'easy') {
+    /* 同星级内按热度再排一次，避免几百个动作挤在一起看不出差别 */
+    const asc = sort !== 'starHigh';
+    list = list.slice().sort((a, b) => {
+      const d = asc ? diffStarsOf(a) - diffStarsOf(b) : diffStarsOf(b) - diffStarsOf(a);
+      return d || heatCmp(a, b);
+    });
+  }
   return list;
 };
 
@@ -393,14 +403,18 @@ function injectFilterExtras() {
   if (!f || document.getElementById('partSelect')) return;
   const tags = [...new Set(Object.values(EXERCISE_EXTRA).flatMap(x => x.g || []))].sort();
   const parts = [...new Set(EXERCISES.map(e => e.category))].filter(Boolean);
+  /* 排序已提到筛选条常驻；仅当旧版页面没有该控件时补一个，避免重复 id */
+  const sortHTML = document.getElementById('sortSelect') ? '' : `
+    <select class="sel" id="sortSelect" onchange="doFilter()">
+      <option value="default">默认排序</option><option value="hot">热门优先</option>
+      <option value="starHigh">星级 高 → 低</option><option value="starLow">星级 低 → 高</option>
+      <option value="name">按名称</option><option value="random">随机打乱</option></select>`;
   const html = `
     <select class="sel" id="partSelect" onchange="doFilter()"><option value="all">全部分类</option>
       ${parts.map(p => `<option value="${p}">${PART_ZH[p] || p}</option>`).join('')}</select>
     <select class="sel" id="tagSelect" onchange="doFilter()"><option value="all">全部标签</option>
       ${tags.map(t => `<option value="${t}">${t}</option>`).join('')}</select>
-    <select class="sel" id="sortSelect" onchange="doFilter()">
-      <option value="default">默认排序</option><option value="name">按名称</option>
-      <option value="easy">从易到难</option><option value="random">随机打乱</option></select>
+    ${sortHTML}
     <button class="btn btn-ghost btn-sm" onclick="randomExercise()">${ic('zap')}手气不错</button>
     <button class="btn btn-ghost btn-sm" onclick="resetFilters()">${ic('rotate')}重置</button>`;
   f.insertAdjacentHTML('beforeend', html);
@@ -559,12 +573,22 @@ document.addEventListener('keydown', e => {
   // Esc 由 app.js 统一处理：只关最上层弹窗，避免一次按掉多层
 });
 
-/* 图片兜底：只拷了 HTML 没带 gifs 目录时，退回内嵌首帧，不留破图 */
+/* 图片兜底：首屏 GIF 并发多时，浏览器偶发连接被拒，先错峰重试一次；
+   仍失败（例如只拷了 HTML 没带 gifs 目录）才退回内嵌首帧，不留破图 */
 document.addEventListener('error', function (e) {
   const img = e.target;
   if (!(img instanceof HTMLImageElement) || img.dataset.fallback) return;
-  const m = (img.getAttribute('src') || '').match(/gifs\/(\d{4})-/);
+  const src = img.getAttribute('src') || '';
+  const m = src.match(/gifs\/(\d{4})-/);
   if (!m) return;
+  if (!img.dataset.retry) {
+    img.dataset.retry = '1';
+    setTimeout(() => {
+      if (!img.isConnected || img.dataset.fallback) return;
+      img.src = src + (src.includes('?') ? '&' : '?') + 'r=1';
+    }, 260 + Math.floor(Math.random() * 700));
+    return;
+  }
   const t = (typeof EXERCISE_THUMBS !== 'undefined') && EXERCISE_THUMBS[m[1]];
   if (t) { img.dataset.fallback = '1'; img.src = t; }
 }, true);

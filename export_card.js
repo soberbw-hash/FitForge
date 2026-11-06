@@ -310,7 +310,9 @@ async function buildCard(dayKey) {
     const top = CARD.HEADER + i * itemH;
     const mg = MUSCLE_GROUPS[ex.primary[0]];
     const eq = EQUIPMENT[ex.equipment]?.name || ex.equipment;
-    const diff = DIFFICULTY[ex.difficulty]?.name || '';
+    const diff = (typeof diffStarsOf === 'function'
+        ? '★'.repeat(diffStarsOf(ex)) + '☆'.repeat(3 - diffStarsOf(ex)) + ' ' : '')
+      + (DIFFICULTY[ex.difficulty]?.name || '');
 
     // 大图白底卡片
     ctx.save();
@@ -677,7 +679,9 @@ function openMoveLightbox(id, idx) {
   set('#moveLightboxMeta', [
     MUSCLE_GROUPS[ex.primary[0]]?.name,
     EQUIPMENT[ex.equipment]?.name || ex.equipment,
-    DIFFICULTY[ex.difficulty]?.name
+    (typeof diffStarsOf === 'function'
+      ? '★'.repeat(diffStarsOf(ex)) + '☆'.repeat(3 - diffStarsOf(ex)) + ' ' : '')
+      + (DIFFICULTY[ex.difficulty]?.name || '')
   ].filter(Boolean).join(' · '));
   set('#moveLightboxNote', (ex.instructions || '按标准姿势完成动作，注意控制节奏与呼吸。').trim());
   const lb = document.getElementById('moveLightbox');

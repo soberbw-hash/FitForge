@@ -1426,6 +1426,56 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
   .body-svg { max-width: 300px; }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   难度星级 · 站内热度 · 常驻排序
+   ═══════════════════════════════════════════════════════════ */
+.card-tags { flex-wrap: wrap; row-gap: 4px; }
+.badge .stars { font-size: 11px; letter-spacing: .5px; line-height: 1; font-style: normal; }
+.badge .stars i { font-style: normal; opacity: .34; }
+
+.heat-pill {
+  position: absolute; left: 8px; bottom: 8px; z-index: 2;
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 7px; border-radius: 20px;
+  font-size: 10px; font-weight: 650; line-height: 1.7;
+  font-variant-numeric: tabular-nums;
+  color: #9A5A18; background: rgba(255,247,234,.9);
+  border: 1px solid rgba(214,138,55,.22);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+.heat-pill .heat-lb { font-size: 9.5px; font-weight: 700; opacity: .82; }
+.heat-pill .ic { width: 10px; height: 10px; flex-shrink: 0; }
+[data-theme="dark"] .heat-pill {
+  color: #F0B26A; background: rgba(48,32,16,.84);
+  border-color: rgba(240,178,106,.22);
+}
+
+.sort-main { flex: 0 0 auto; min-width: 138px; }
+@media (max-width: 620px) {
+  .sort-main { flex: 1 1 calc(50% - 4px); min-width: 0; }
+}
+
+.detail-rating { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 7px; }
+.dr-box {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 9px;
+  background: var(--surface-2, rgba(0,0,0,.03));
+  border: 1px solid var(--line);
+  font-size: 12px;
+}
+.dr-l { color: var(--t3); font-size: 11px; }
+.dr-box b { font-weight: 650; color: var(--t1); }
+.dr-box .stars { color: #C98A1E; font-size: 13px; letter-spacing: 1px; }
+.dr-box .stars i { font-style: normal; opacity: .3; }
+.dr-box .dr-heat { display: inline-flex; align-items: center; gap: 3px; color: #B4651C; font-variant-numeric: tabular-nums; }
+.dr-box .dr-heat .ic { width: 12px; height: 12px; }
+.dr-box .dr-heat .heat-lb { font-size: 10px; font-weight: 700; opacity: .8; }
+.dr-box small { color: var(--t4); font-size: 10px; }
+.dr-note { font-size: 11px; line-height: 1.5; color: var(--t4); margin-bottom: 14px; }
+[data-theme="dark"] .dr-box .stars { color: #E3BC5E; }
+[data-theme="dark"] .dr-box .dr-heat { color: #F0B26A; }
+
 </style>
 </head>
 <body>
@@ -1520,6 +1570,14 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
         <svg class="ic"><use href="#i-sliders"/></svg><span>筛选</span><i class="filter-badge" id="filterBadge" hidden>0</i>
         <svg class="ic chev"><use href="#i-chevron"/></svg>
       </button>
+      <select class="sel sort-main" id="sortSelect" onchange="doFilter()" aria-label="动作排序方式">
+        <option value="default">默认排序</option>
+        <option value="hot">热门优先</option>
+        <option value="starHigh">星级 高 → 低</option>
+        <option value="starLow">星级 低 → 高</option>
+        <option value="name">按名称</option>
+        <option value="random">随机打乱</option>
+      </select>
       <div class="result-count"><b id="resultNum">0</b> 个动作</div>
 
       <div class="filters-adv" id="filtersAdv">
@@ -2143,6 +2201,118 @@ const EXERCISE_EXTRA = {"1000":{"t":"小腿三头肌","s":["腘绳肌","臀部"]
 </script>
 <script>
 /* ═══════════════════════════════════════════════════════════
+   FitForge — 难度星级与站内热度
+   ---------------------------------------------------------------
+   全部由本地数据计算，没有任何联网统计、没有随机编造的人气值：
+   · 星级 = 动作库自带的难度字段（初级 1 星 / 中级 2 星 / 高级 3 星）
+   · 热度 = 动作通用度（复合、经典主项、肌群覆盖、器械易得、要领完整）
+            + 你自己的使用频次（收藏 / 周计划 / 训练记录 / 详情查看）
+   ═══════════════════════════════════════════════════════════ */
+
+const DIFF_STARS = { beginner: 1, intermediate: 2, advanced: 3 };
+function diffStarsOf(ex) { return DIFF_STARS[ex && ex.difficulty] || 1; }
+
+/* 三格星级；实心为当前难度，空心补足三格 */
+function starHTML(ex) {
+  const n = diffStarsOf(ex);
+  return `<span class="stars" aria-label="难度 ${n} 星">${'★'.repeat(n)}<i>${'☆'.repeat(3 - n)}</i></span>`;
+}
+
+/* 经典主项白名单：按动作库里实际存在的基础动作名精确匹配，
+   不靠模糊关键词，避免「单腿深蹲 / 如厕式深蹲」这类小众变式混进热门榜 */
+const CLASSIC_NAMES = new Set([
+  '俯卧撑','引体向上','卷腹','波比跳','登山跑','开合跳跳','跳绳','俄罗斯转体',
+  '死虫式','熊爬','农夫走','悬垂抬腿','全程平板','站姿提踵','壶铃摆荡','壶铃前蹲',
+  '杠铃深蹲','杠铃前蹲','杠铃卧推','杠铃硬拉','杠铃弯举','杠铃臀桥','杠铃箭步蹲',
+  '杠铃耸肩','杠铃登台阶','杠铃前平举','杠铃早安式',
+  '哑铃深蹲','哑铃卧推','哑铃硬拉','哑铃推举','哑铃箭步蹲','哑铃侧平举',
+  '哑铃飞鸟','哑铃前平举','哑铃耸肩','哑铃登台阶',
+  '绳索下压','绳索下拉','绳索弯举','绳索硬拉','绳索卧推','绳索侧平举','绳索肩推','绳索耸肩',
+  '弹力带深蹲','弹力带卧推','弹力带肩推','弹力带耸肩',
+  'EZ杠弯举','蝴蝶式','杠铃俯身划船','哑铃俯身划船','绳索坐姿划船'
+]);
+const EQUIP_HEAT = {
+  bodyweight: 14, dumbbell: 12, band: 9, barbell: 8,
+  kettlebell: 6, cable: 5, machine: 4, smith: 3
+};
+
+const FFHeat = (() => {
+  let base = null;      // id -> 通用度基准分
+  let dyn = null;       // id -> 本地行为加权分
+  let views = null;     // id -> 详情查看次数
+
+  function readViews() {
+    if (views) return views;
+    try { views = JSON.parse(localStorage.getItem('ff_views') || '{}') || {}; }
+    catch (e) { views = {}; }
+    return views;
+  }
+
+  function baseScore(ex) {
+    const extra = (typeof EXERCISE_EXTRA !== 'undefined' && EXERCISE_EXTRA[ex.id]) || {};
+    const tags = extra.g || [];
+    const muscles = new Set([].concat(ex.primary || [], ex.secondary || []));
+    let s = 24;
+    if (ex.mechanic === 'compound') s += 10;                  // 多关节复合动作，通用度更高
+    s += Math.min(muscles.size, 6) * 2.5;                     // 参与肌群覆盖
+    s += EQUIP_HEAT[ex.equipment] != null ? EQUIP_HEAT[ex.equipment] : 4;
+    if (CLASSIC_NAMES.has(ex.name)) s += 22;                  // 基础主项
+    s -= Math.max(0, ex.name.length - 7) * 1.0;               // 名称越长的变式越小众
+    s += Math.min((ex.steps || []).length, 8) * 1.2;          // 动作要领完整度
+    if (tags.includes('居家可练')) s += 4;
+    s += ({ beginner: 5, intermediate: 2, advanced: 0 }[ex.difficulty] || 0);
+    if (ex.category === 'cardio') s += 3;
+    return Math.min(96, s);
+  }
+
+  function build() {
+    if (base) return;
+    base = {};
+    EXERCISES.forEach(ex => { base[ex.id] = baseScore(ex); });
+  }
+
+  /* 每次筛选前重算本地行为分量（收藏、计划、训练、查看） */
+  function sync() {
+    build();
+    const d = {};
+    const add = (id, v) => { if (id) d[id] = (d[id] || 0) + v; };
+    try { (state.favorites || []).forEach(id => add(id, 18)); } catch (e) {}
+    try {
+      Object.values(state.weeklyPlan || {}).forEach(day =>
+        (day.exercises || []).forEach(it => add(it.id, 8)));
+    } catch (e) {}
+    try {
+      (state.trainingLog || []).forEach(entry =>
+        (entry.exercises || []).forEach(it => add(it.id, 6)));
+    } catch (e) {}
+    const v = readViews();
+    Object.keys(v).forEach(id => add(id, Math.min(Number(v[id]) || 0, 10) * 1.5));
+    dyn = d;
+  }
+
+  function score(ex) {
+    if (!dyn) sync();
+    return Math.max(1, Math.min(99, Math.round((base[ex.id] || 40) + (dyn[ex.id] || 0))));
+  }
+
+  function noteView(id) {
+    const v = readViews();
+    v[id] = Math.min((Number(v[id]) || 0) + 1, 99);
+    try { localStorage.setItem('ff_views', JSON.stringify(v)); } catch (e) {}
+    sync();
+  }
+
+  return { sync, score, noteView };
+})();
+
+/* 卡片上的热度小胶囊 */
+function heatPillHTML(ex) {
+  return `<span class="heat-pill" title="站内热度 ${FFHeat.score(ex)}／100 · 动作通用度 + 你的使用频次"><span class="heat-lb">热</span>${FFHeat.score(ex)}</span>`;
+}
+
+</script>
+<script>
+/* ═══════════════════════════════════════════════════════════
  * GIF89a 极简编码器（无依赖，可在 file:// 下直接使用）
  * - 固定 256 色全局调色板 + 5bit RGB 查表量化
  * - LZW 压缩；支持「局部帧」（第一帧画全卡，后续帧只更新动作列）
@@ -2762,6 +2932,7 @@ function doFilter() {
 }
 
 function getFiltered() {
+  try { FFHeat.sync(); } catch (e) {}
   const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
   const eq = document.getElementById('equipSelect')?.value || 'all';
   const et = document.getElementById('equipTypeSelect')?.value || 'all';
@@ -2793,12 +2964,13 @@ function cardHTML(ex, showFav = true) {
     <div class="card-media">
       <img src="${ex.gifUrl}" alt="${ex.name}" loading="lazy">
       ${showFav ? `<button class="fav ${isFav?'on':''}" onclick="event.stopPropagation();toggleFav('${ex.id}')" title="收藏">${ic(isFav?'heart-fill':'heart')}</button>` : ''}
+      ${heatPillHTML(ex)}
     </div>
     <div class="card-body">
       <div class="card-title">${ex.name}</div>
       <div class="card-foot">
         <div class="card-tags">
-          <span class="badge ${diffCls}">${diffName}</span>
+          <span class="badge ${diffCls}">${starHTML(ex)}<span>${diffName}</span></span>
           ${ex.mechanic === 'compound' ? `<span class="badge comp">${ic('flame')}<span>复合</span></span>` : ''}
         </div>
         <div class="card-meta">
@@ -2878,6 +3050,7 @@ function renderFavorites() {
 function showDetail(id) {
   const ex = EXERCISES.find(e => e.id === id);
   if (!ex) return;
+  try { FFHeat.noteView(ex.id); } catch (e) {}
 
   const eq = EQUIPMENT[ex.equipment]?.name || ex.equipment;
   const et = (EQUIP_TYPES[equipTypeOf(ex)] || {}).name || '';
@@ -2914,6 +3087,11 @@ function showDetail(id) {
       <div class="detail-info">
         <h2>${ex.name}</h2>
         <div class="detail-tags">${tags}</div>
+        <div class="detail-rating">
+          <span class="dr-box"><span class="dr-l">难度星级</span>${starHTML(ex)}<b>${diff}</b></span>
+          <span class="dr-box"><span class="dr-l">站内热度</span><b class="dr-heat"><span class="heat-lb">热</span>${FFHeat.score(ex)}</b><small>/100</small></span>
+        </div>
+        <div class="dr-note">热度 = 动作通用度 + 你的收藏、计划、训练与查看次数，全部在本地计算</div>
         <div class="train-grid">
           <div class="tg"><div class="tg-v">${ex.setRange}</div><div class="tg-l">建议组数</div></div>
           <div class="tg"><div class="tg-v">${ex.repRange}</div><div class="tg-l">建议次数</div></div>
@@ -3800,7 +3978,9 @@ async function buildCard(dayKey) {
     const top = CARD.HEADER + i * itemH;
     const mg = MUSCLE_GROUPS[ex.primary[0]];
     const eq = EQUIPMENT[ex.equipment]?.name || ex.equipment;
-    const diff = DIFFICULTY[ex.difficulty]?.name || '';
+    const diff = (typeof diffStarsOf === 'function'
+        ? '★'.repeat(diffStarsOf(ex)) + '☆'.repeat(3 - diffStarsOf(ex)) + ' ' : '')
+      + (DIFFICULTY[ex.difficulty]?.name || '');
 
     // 大图白底卡片
     ctx.save();
@@ -4167,7 +4347,9 @@ function openMoveLightbox(id, idx) {
   set('#moveLightboxMeta', [
     MUSCLE_GROUPS[ex.primary[0]]?.name,
     EQUIPMENT[ex.equipment]?.name || ex.equipment,
-    DIFFICULTY[ex.difficulty]?.name
+    (typeof diffStarsOf === 'function'
+      ? '★'.repeat(diffStarsOf(ex)) + '☆'.repeat(3 - diffStarsOf(ex)) + ' ' : '')
+      + (DIFFICULTY[ex.difficulty]?.name || '')
   ].filter(Boolean).join(' · '));
   set('#moveLightboxNote', (ex.instructions || '按标准姿势完成动作，注意控制节奏与呼吸。').trim());
   const lb = document.getElementById('moveLightbox');
@@ -4883,6 +5065,7 @@ function searchScore(ex, q) {
 
 const _origGetFiltered = getFiltered;
 getFiltered = function () {
+  try { FFHeat.sync(); } catch (e) {}
   const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
   const eq = document.getElementById('equipSelect')?.value || 'all';
   const et = document.getElementById('equipTypeSelect')?.value || 'all';
@@ -4902,9 +5085,18 @@ getFiltered = function () {
     if (tag !== 'all' && !(EXERCISE_EXTRA[ex.id]?.g || []).includes(tag)) return false;
     return true;
   });
+  const heatCmp = (a, b) => (FFHeat.score(b) - FFHeat.score(a)) || a.id.localeCompare(b.id);
   if (sort === 'name') list = list.slice().sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
-  if (sort === 'easy') list = list.slice().sort((a, b) => ({ beginner: 0, intermediate: 1, advanced: 2 }[a.difficulty] || 0) - ({ beginner: 0, intermediate: 1, advanced: 2 }[b.difficulty] || 0));
-  if (sort === 'random') list = list.slice().sort(() => Math.random() - .5);
+  else if (sort === 'random') list = list.slice().sort(() => Math.random() - .5);
+  else if (sort === 'hot') list = list.slice().sort(heatCmp);
+  else if (sort === 'starLow' || sort === 'starHigh' || sort === 'easy') {
+    /* 同星级内按热度再排一次，避免几百个动作挤在一起看不出差别 */
+    const asc = sort !== 'starHigh';
+    list = list.slice().sort((a, b) => {
+      const d = asc ? diffStarsOf(a) - diffStarsOf(b) : diffStarsOf(b) - diffStarsOf(a);
+      return d || heatCmp(a, b);
+    });
+  }
   return list;
 };
 
@@ -4932,14 +5124,18 @@ function injectFilterExtras() {
   if (!f || document.getElementById('partSelect')) return;
   const tags = [...new Set(Object.values(EXERCISE_EXTRA).flatMap(x => x.g || []))].sort();
   const parts = [...new Set(EXERCISES.map(e => e.category))].filter(Boolean);
+  /* 排序已提到筛选条常驻；仅当旧版页面没有该控件时补一个，避免重复 id */
+  const sortHTML = document.getElementById('sortSelect') ? '' : `
+    <select class="sel" id="sortSelect" onchange="doFilter()">
+      <option value="default">默认排序</option><option value="hot">热门优先</option>
+      <option value="starHigh">星级 高 → 低</option><option value="starLow">星级 低 → 高</option>
+      <option value="name">按名称</option><option value="random">随机打乱</option></select>`;
   const html = `
     <select class="sel" id="partSelect" onchange="doFilter()"><option value="all">全部分类</option>
       ${parts.map(p => `<option value="${p}">${PART_ZH[p] || p}</option>`).join('')}</select>
     <select class="sel" id="tagSelect" onchange="doFilter()"><option value="all">全部标签</option>
       ${tags.map(t => `<option value="${t}">${t}</option>`).join('')}</select>
-    <select class="sel" id="sortSelect" onchange="doFilter()">
-      <option value="default">默认排序</option><option value="name">按名称</option>
-      <option value="easy">从易到难</option><option value="random">随机打乱</option></select>
+    ${sortHTML}
     <button class="btn btn-ghost btn-sm" onclick="randomExercise()">${ic('zap')}手气不错</button>
     <button class="btn btn-ghost btn-sm" onclick="resetFilters()">${ic('rotate')}重置</button>`;
   f.insertAdjacentHTML('beforeend', html);
@@ -5098,12 +5294,22 @@ document.addEventListener('keydown', e => {
   // Esc 由 app.js 统一处理：只关最上层弹窗，避免一次按掉多层
 });
 
-/* 图片兜底：只拷了 HTML 没带 gifs 目录时，退回内嵌首帧，不留破图 */
+/* 图片兜底：首屏 GIF 并发多时，浏览器偶发连接被拒，先错峰重试一次；
+   仍失败（例如只拷了 HTML 没带 gifs 目录）才退回内嵌首帧，不留破图 */
 document.addEventListener('error', function (e) {
   const img = e.target;
   if (!(img instanceof HTMLImageElement) || img.dataset.fallback) return;
-  const m = (img.getAttribute('src') || '').match(/gifs\/(\d{4})-/);
+  const src = img.getAttribute('src') || '';
+  const m = src.match(/gifs\/(\d{4})-/);
   if (!m) return;
+  if (!img.dataset.retry) {
+    img.dataset.retry = '1';
+    setTimeout(() => {
+      if (!img.isConnected || img.dataset.fallback) return;
+      img.src = src + (src.includes('?') ? '&' : '?') + 'r=1';
+    }, 260 + Math.floor(Math.random() * 700));
+    return;
+  }
   const t = (typeof EXERCISE_THUMBS !== 'undefined') && EXERCISE_THUMBS[m[1]];
   if (t) { img.dataset.fallback = '1'; img.src = t; }
 }, true);

@@ -219,6 +219,7 @@ function doFilter() {
 }
 
 function getFiltered() {
+  try { FFHeat.sync(); } catch (e) {}
   const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
   const eq = document.getElementById('equipSelect')?.value || 'all';
   const et = document.getElementById('equipTypeSelect')?.value || 'all';
@@ -250,12 +251,13 @@ function cardHTML(ex, showFav = true) {
     <div class="card-media">
       <img src="${ex.gifUrl}" alt="${ex.name}" loading="lazy">
       ${showFav ? `<button class="fav ${isFav?'on':''}" onclick="event.stopPropagation();toggleFav('${ex.id}')" title="收藏">${ic(isFav?'heart-fill':'heart')}</button>` : ''}
+      ${heatPillHTML(ex)}
     </div>
     <div class="card-body">
       <div class="card-title">${ex.name}</div>
       <div class="card-foot">
         <div class="card-tags">
-          <span class="badge ${diffCls}">${diffName}</span>
+          <span class="badge ${diffCls}">${starHTML(ex)}<span>${diffName}</span></span>
           ${ex.mechanic === 'compound' ? `<span class="badge comp">${ic('flame')}<span>复合</span></span>` : ''}
         </div>
         <div class="card-meta">
@@ -335,6 +337,7 @@ function renderFavorites() {
 function showDetail(id) {
   const ex = EXERCISES.find(e => e.id === id);
   if (!ex) return;
+  try { FFHeat.noteView(ex.id); } catch (e) {}
 
   const eq = EQUIPMENT[ex.equipment]?.name || ex.equipment;
   const et = (EQUIP_TYPES[equipTypeOf(ex)] || {}).name || '';
@@ -371,6 +374,11 @@ function showDetail(id) {
       <div class="detail-info">
         <h2>${ex.name}</h2>
         <div class="detail-tags">${tags}</div>
+        <div class="detail-rating">
+          <span class="dr-box"><span class="dr-l">难度星级</span>${starHTML(ex)}<b>${diff}</b></span>
+          <span class="dr-box"><span class="dr-l">站内热度</span><b class="dr-heat"><span class="heat-lb">热</span>${FFHeat.score(ex)}</b><small>/100</small></span>
+        </div>
+        <div class="dr-note">热度 = 动作通用度 + 你的收藏、计划、训练与查看次数，全部在本地计算</div>
         <div class="train-grid">
           <div class="tg"><div class="tg-v">${ex.setRange}</div><div class="tg-l">建议组数</div></div>
           <div class="tg"><div class="tg-v">${ex.repRange}</div><div class="tg-l">建议次数</div></div>

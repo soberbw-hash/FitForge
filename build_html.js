@@ -16,6 +16,7 @@ const parts = [
   ['data.js', '动作与计划数据 / 18 套模板'],
   ['thumbs_data.js', 'GIF 首帧缩略图'],
   ['extra_data.js', '肌肉 / 标签 / 别名增强数据'],
+  ['rating.js', '难度星级 / 站内热度'],
   ['gif_encoder.js', 'GIF 编码器'],
   ['body_svg.js', '解剖人体肌群图'],
   ['app.js', '应用逻辑'],

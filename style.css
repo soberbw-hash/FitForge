@@ -1416,3 +1416,53 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
   .stats-empty .btn { width: 100%; }
   .body-svg { max-width: 300px; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   难度星级 · 站内热度 · 常驻排序
+   ═══════════════════════════════════════════════════════════ */
+.card-tags { flex-wrap: wrap; row-gap: 4px; }
+.badge .stars { font-size: 11px; letter-spacing: .5px; line-height: 1; font-style: normal; }
+.badge .stars i { font-style: normal; opacity: .34; }
+
+.heat-pill {
+  position: absolute; left: 8px; bottom: 8px; z-index: 2;
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 7px; border-radius: 20px;
+  font-size: 10px; font-weight: 650; line-height: 1.7;
+  font-variant-numeric: tabular-nums;
+  color: #9A5A18; background: rgba(255,247,234,.9);
+  border: 1px solid rgba(214,138,55,.22);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+.heat-pill .heat-lb { font-size: 9.5px; font-weight: 700; opacity: .82; }
+.heat-pill .ic { width: 10px; height: 10px; flex-shrink: 0; }
+[data-theme="dark"] .heat-pill {
+  color: #F0B26A; background: rgba(48,32,16,.84);
+  border-color: rgba(240,178,106,.22);
+}
+
+.sort-main { flex: 0 0 auto; min-width: 138px; }
+@media (max-width: 620px) {
+  .sort-main { flex: 1 1 calc(50% - 4px); min-width: 0; }
+}
+
+.detail-rating { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 7px; }
+.dr-box {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 9px;
+  background: var(--surface-2, rgba(0,0,0,.03));
+  border: 1px solid var(--line);
+  font-size: 12px;
+}
+.dr-l { color: var(--t3); font-size: 11px; }
+.dr-box b { font-weight: 650; color: var(--t1); }
+.dr-box .stars { color: #C98A1E; font-size: 13px; letter-spacing: 1px; }
+.dr-box .stars i { font-style: normal; opacity: .3; }
+.dr-box .dr-heat { display: inline-flex; align-items: center; gap: 3px; color: #B4651C; font-variant-numeric: tabular-nums; }
+.dr-box .dr-heat .ic { width: 12px; height: 12px; }
+.dr-box .dr-heat .heat-lb { font-size: 10px; font-weight: 700; opacity: .8; }
+.dr-box small { color: var(--t4); font-size: 10px; }
+.dr-note { font-size: 11px; line-height: 1.5; color: var(--t4); margin-bottom: 14px; }
+[data-theme="dark"] .dr-box .stars { color: #E3BC5E; }
+[data-theme="dark"] .dr-box .dr-heat { color: #F0B26A; }

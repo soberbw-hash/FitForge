@@ -100,6 +100,14 @@
         <svg class="ic"><use href="#i-sliders"/></svg><span>筛选</span><i class="filter-badge" id="filterBadge" hidden>0</i>
         <svg class="ic chev"><use href="#i-chevron"/></svg>
       </button>
+      <select class="sel sort-main" id="sortSelect" onchange="doFilter()" aria-label="动作排序方式">
+        <option value="default">默认排序</option>
+        <option value="hot">热门优先</option>
+        <option value="starHigh">星级 高 → 低</option>
+        <option value="starLow">星级 低 → 高</option>
+        <option value="name">按名称</option>
+        <option value="random">随机打乱</option>
+      </select>
       <div class="result-count"><b id="resultNum">0</b> 个动作</div>
 
       <div class="filters-adv" id="filtersAdv">
@@ -394,6 +402,7 @@
 <script src="data.js"></script>
 <script src="thumbs_data.js"></script>
 <script src="extra_data.js"></script>
+<script src="rating.js"></script>
 <script src="gif_encoder.js"></script>
 <script src="body_svg.js"></script>
 <script src="app.js"></script>
