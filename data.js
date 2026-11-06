@@ -19,15 +19,24 @@ const MUSCLE_GROUPS = {
   calves:     { name: '小腿',     color: '#CE6A94' },
 };
 const EQUIPMENT = {
-  barbell:    { name: '杠铃' },
-  dumbbell:   { name: '哑铃' },
-  cable:      { name: '绳索' },
-  machine:    { name: '固定器械' },
-  bodyweight: { name: '自重' },
-  kettlebell: { name: '壶铃' },
-  band:       { name: '弹力带' },
-  smith:      { name: '史密斯机' },
+  barbell:    { name: '杠铃',     type: 'free' },
+  dumbbell:   { name: '哑铃',     type: 'free' },
+  kettlebell: { name: '壶铃',     type: 'free' },
+  band:       { name: '弹力带',   type: 'free' },
+  cable:      { name: '绳索',     type: 'fixed' },
+  machine:    { name: '训练机',   type: 'fixed' },
+  smith:      { name: '史密斯机', type: 'fixed' },
+  bodyweight: { name: '自重',     type: 'body' },
 };
+/* 器械大类：固定器械（轨迹固定）/ 自由器械（自由重量）/ 自重训练 */
+const EQUIP_TYPES = {
+  fixed: { name: '固定器械', desc: '轨迹固定，器械引导发力' },
+  free:  { name: '自由器械', desc: '自由重量，需自主控制轨迹' },
+  body:  { name: '自重训练', desc: '无需器械，靠自身体重' },
+};
+function equipTypeOf(ex) {
+  return (EQUIPMENT[ex && ex.equipment] || {}).type || 'body';
+}
 const DIFFICULTY = {
   beginner:     { name: '初级' },
   intermediate: { name: '中级' },

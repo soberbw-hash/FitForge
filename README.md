@@ -7,11 +7,12 @@
 ## 特性
 
 - **1324 个健身动作** — 中文动作名与分步要领，目标肌 / 协同肌 / 器械 / 力型 / 力学齐全，支持中文别名搜索（搜「推胸」「伏地挺身」都能命中）
-- **真人 GIF 演示** — 素材本地打包，动作详情、跟练界面、导出的训练卡全部会动
+- **器械三大类** — 筛选栏可按 **固定器械（331）/ 自由器械（626）/ 自重训练（367）** 筛选，具体器械下拉也按大类分组；搜「固定器械」也能直接命中。固定器械含绳索、训练机、史密斯机；自由器械含杠铃、哑铃、壶铃、弹力带
+- **真人 GIF 演示** — 1324 个原始 GIF 本地打包，动作卡 / 详情 / 跟练界面浏览器原生播放完整帧动画；导出的训练卡用 8 帧循环动图
 - **周计划** — 18 套经典模板（StrongLifts 5×5、5/3/1、PHUL、Arnold、五分化、居家无器械、HIIT、核心、拉伸、办公室…），分类可筛，也可手动逐日编排
 - **会动的训练卡** — 一天一张 1080px 长图，动作演示占 520px 见方（原始分辨率抽 8 帧循环播放），组次 / 肌群 / 要领并列在右；GIF 或 PNG、整周批量导出，周计划日卡右上角也能单独下载某一天
 - **引导式跟练** — 大 GIF 循环 + 分步要领 + 逐组打卡 + 休息倒计时 + PR 检测 + 下次加重量建议，中途退出可续练
-- **肌肉地图** — 人体 32 个肌群分区点选，看动作列表与本周训练量
+- **肌肉地图** — 灰白解剖线描人体，15 个肌群分区点选，正背面全覆盖，看动作列表与本周训练量
 - **工具箱** — 1RM 估算、杠铃片配重、BMI / TDEE、心率区间、训练容量、本地 JSON 备份
 - **概览统计** — 26 周训练热力图、周容量柱图、PR 榜、肌群覆盖提示
 - **手机 / 电脑双端适配** — 手机底部导航，桌面顶栏；导出面板与跟练界面窄屏可用
@@ -27,23 +28,34 @@ cd FitForge
 
 **注意**：`gifs/` 文件夹必须和 `fitforge.html` 放在同一目录，否则动作演示图加载不出来（应用会自动退回内嵌首帧图，不会白屏）。
 
-## 部署到 Vercel
+## 线上部署（Vercel）
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/soberbw-hash/FitForge&project-name=fitforge-site&repository-name=fitforge-site)
+线上入口是构建产物 `web/`，和仓库根的结构不一样：
 
-**推荐**：在 [Vercel 控制台](https://vercel.com/new) 选 **Add New → Project → Import Git Repository → `soberbw-hash/FitForge` → Deploy**，授权 GitHub 后其余保持默认即可（纯静态、Framework 选 `Other`、无需构建命令）。之后每次 `git push` 到 `main` 会自动重新部署。
+```
+web/
+├── index.html       # 6.3MB 首屏：全部动作数据、内嵌首帧兜底、所有逻辑
+├── anim/cNN.json    # 14 个分块（33MB），只在导出动态训练卡时按需加载
+└── gifs/            # 1324 个原始动作 GIF（123MB），卡片浏览器原生播放
+```
 
-也可以直接点上方的 **Deploy with Vercel** 按钮，它会把公开仓库复制到你自己账号下再部署。注意 **Private Repository Name 只能填小写字母、数字、`.` `_` `-`**，填 `FitForge` 这种带大写的会报 `A Project name can only contain up to 100 lowercase letters...`；而且副本不能跟已存在的仓库同名，按钮已预设为 `fitforge-site`。这样部署的是副本，源仓库后续更新不会自动同步。
+`node build_html.js` 会同时重建桌面离线版 `fitforge.html`（39MB 单文件，动画帧全内嵌）和 `web/`。两份产物共用同一套源码，素材全部本地生成，运行时**没有任何第三方请求**。
 
-**不想建副本**：在这个页面底部点 **Import a different Git Repository →**，直接选 `soberbw-hash/FitForge` 即可，跳过仓库命名这一步。
+当前线上站点部署在独立仓库 `soberbw-hash/fitforge-web`（Vercel 连它，push 自动部署），只放上面三个部分，源码和中间产物不上线。该仓库是 private，但**不影响网站公开访问**。在 Vercel 控制台选 **Add New → Project → Import Git Repository**，Framework 选 `Other`、构建命令与输出目录留空即可。
 
 几个已经配好的点：
 
-- `vercel.json` 把根路径 `/` 指向 `fitforge.html`。仓库根的 `index.html` 是开发用骨架（动画帧数据为空），**不能**当线上入口。
-- `gifs/` 需与成品同目录，仓库结构已满足；GIF 设了长期缓存，HTML 不缓存以便更新即时生效。
-- `.vercelignore` 只保留单文件成品和 `gifs/`，源码与构建中间产物不发布。
+- 线上首屏 6.3MB，比桌面单文件瘦 84%；动画帧拆块后首屏 0 下载，点「导出训练卡」才按需取。
+- 1324 个原始 GIF 走浏览器懒加载，滚动到哪张才下哪张；帧数比导出卡的 8 帧动图完整，动作更顺滑。
+- 万一 GIF 或分块暂时取不到，卡片自动退回内嵌首帧，不会白屏或破图。
+- 仓库根的 `vercel.json` 只在**直接从主仓库部署**时有用，把 `/` 指向 `fitforge.html`（开发骨架 `index.html` 动画帧数据为空，不能直接当线上入口）。
 
-> ⚠️ 不要用 `vercel` CLI 直接上传：Hobby 计划对 CLI 源文件限制 100MB，而 `gifs/` 单独就有 127MB，会被拒绝。Git 集成由 Vercel 从 GitHub 侧拉取仓库，不受这条限制。
+> ⚠️ 不要用 `vercel` CLI 直接上传：Hobby 计划对 CLI 源文件限制 100MB，而 `web/` 合计约 162MB，会被拒绝。Git 集成由 Vercel 从 GitHub 侧拉取，不受这条限制。
+> ⚠️ `*.vercel.app` 在中国大陆常被 DNS 污染/阻断，国内朋友可能打不开（本机开代理能访问就说明部署本身没问题）。想国内直连需绑自定义域名或换国内静态托管。
+
+## 分类数据核对
+
+`node _verify_categories.js` 可复跑全量核验：1324 条动作的字段完整性、枚举合法性、部位 → 目标肌语义对应、三大器械覆盖、15 个肌群筛选命中、中文译名一致性、GIF 一一对应。当前全部通过。
 
 ## 截图
 

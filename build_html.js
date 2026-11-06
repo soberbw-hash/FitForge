@@ -1,8 +1,8 @@
 /* 打包 FitForge
  * 1) fitforge.html  —— 桌面离线单文件：全部内嵌，双击即用，无需联网
- * 2) web/index.html —— 线上版：33MB 动画帧拆成 anim/cNN.json 按需加载，
- *                       首屏 HTML 只有 6MB 左右，动作卡也会动
- * 两份产物共用同一套源码，线上版数据全部来自本地 GIF 抽帧，无任何第三方请求。
+ * 2) web/index.html —— 线上版：33MB 动画帧拆成 anim/cNN.json，只在导出动图时按需加载；
+ *                       首屏 HTML 约 6MB，动作卡直接播放 web/gifs/ 里的 1324 个原始 GIF
+ * 两份产物共用同一套源码，全部素材本地生成，无任何第三方请求。
  */
 const fs = require('fs');
 const path = require('path');
@@ -48,7 +48,10 @@ if (!base.includes(placeholder)) {
 /* 残留外部引用检查 */
 const leftover = [];
 base.replace(/<script[^>]*src=["']([^"']+)["'][^>]*>/gi, (m, p) => { leftover.push(p); return m; });
-base.replace(/<link[^>]*href=["']([^"']+)["'][^>]*>/gi, (m, p) => { leftover.push(p); return m; });
+base.replace(/<link[^>]*href=["']([^"']+)["'][^>]*>/gi, (m, p) => {
+  if (!/^data:/i.test(p)) leftover.push(p);
+  return m;
+});
 if (leftover.length) {
   console.error('X 仍有外部引用:', leftover.join(', '));
   process.exit(1);

@@ -189,10 +189,21 @@ function renderEquipSelect() {
   const sel = document.getElementById('equipSelect');
   if (!sel) return;
   let h = `<option value="all">全部器械</option>`;
-  for (const [k, v] of Object.entries(EQUIPMENT)) {
-    h += `<option value="${k}">${v.name}</option>`;
+  /* 按固定 / 自由 / 自重三大类分组，避免「固定器械」既是大类又是具体器械的混淆 */
+  for (const [tk, tv] of Object.entries(EQUIP_TYPES)) {
+    const keys = Object.keys(EQUIPMENT).filter(k => EQUIPMENT[k].type === tk);
+    if (!keys.length) continue;
+    h += `<optgroup label="${tv.name}">`;
+    keys.forEach(k => { h += `<option value="${k}">${EQUIPMENT[k].name}</option>`; });
+    h += `</optgroup>`;
   }
   sel.innerHTML = h;
+
+  const ts = document.getElementById('equipTypeSelect');
+  if (ts && ts.options.length <= 1) {
+    ts.innerHTML = `<option value="all">全部训练方式</option>` +
+      Object.entries(EQUIP_TYPES).map(([k, v]) => `<option value="${k}">${v.name}</option>`).join('');
+  }
 }
 
 function setMuscle(m) {
@@ -210,11 +221,13 @@ function doFilter() {
 function getFiltered() {
   const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
   const eq = document.getElementById('equipSelect')?.value || 'all';
+  const et = document.getElementById('equipTypeSelect')?.value || 'all';
   const diff = document.getElementById('diffSelect')?.value || 'all';
   return EXERCISES.filter(ex => {
     if (q && !ex.name.toLowerCase().includes(q) && !(ex.nameEn || '').toLowerCase().includes(q)) return false;
     if (state.muscleFilter !== 'all' && !ex.primary.includes(state.muscleFilter) && !ex.secondary.includes(state.muscleFilter)) return false;
     if (eq !== 'all' && ex.equipment !== eq) return false;
+    if (et !== 'all' && equipTypeOf(ex) !== et) return false;
     if (diff !== 'all' && ex.difficulty !== diff) return false;
     if (state.forceFilter !== 'all' && ex.force !== state.forceFilter) return false;
     if (state.mechanicFilter !== 'all' && ex.mechanic !== state.mechanicFilter) return false;
@@ -224,7 +237,10 @@ function getFiltered() {
 
 /* ═══ GRID ═══ */
 function cardHTML(ex, showFav = true) {
-  const mg = MUSCLE_GROUPS[ex.primary[0]];
+  /* 有氧动作在原始数据里被标成「腹肌」，展示上改为「有氧全身」更贴合实际 */
+  const mg = ex.category === 'cardio'
+    ? { name: '有氧全身', color: '#4C9A86' }
+    : MUSCLE_GROUPS[ex.primary[0]];
   const diffCls = { beginner:'beg', intermediate:'int', advanced:'adv' }[ex.difficulty] || 'beg';
   const diffName = DIFFICULTY[ex.difficulty]?.name || '';
   const isFav = state.favorites.includes(ex.id);
@@ -320,16 +336,18 @@ function showDetail(id) {
   const ex = EXERCISES.find(e => e.id === id);
   if (!ex) return;
 
-  const mg = MUSCLE_GROUPS[ex.primary[0]];
   const eq = EQUIPMENT[ex.equipment]?.name || ex.equipment;
+  const et = (EQUIP_TYPES[equipTypeOf(ex)] || {}).name || '';
   const diff = DIFFICULTY[ex.difficulty]?.name || '';
   const mech = MECHANIC[ex.mechanic]?.name || '';
+  const isCardio = ex.category === 'cardio';
 
   const seenTag = new Set();
   const tags = [
-    ...ex.primary.map(m => ({ t: MUSCLE_GROUPS[m]?.name || m, pri: true })),
-    ...ex.secondary.map(m => ({ t: MUSCLE_GROUPS[m]?.name || m, pri: false })),
-    { t: eq }, { t: diff }, { t: FORCE_LABEL[ex.force] }, { t: mech }
+    ...(isCardio ? ['有氧全身'] : ex.primary.map(m => MUSCLE_GROUPS[m]?.name || m))
+      .map(t => ({ t, pri: true })),
+    ...(isCardio ? [] : ex.secondary.map(m => ({ t: MUSCLE_GROUPS[m]?.name || m, pri: false }))),
+    { t: eq }, { t: et }, { t: diff }, { t: FORCE_LABEL[ex.force] }, { t: mech }
   ].filter(o => o.t && !seenTag.has(o.t) && seenTag.add(o.t))
    .map(o => `<span class="dtag ${o.pri ? 'pri' : ''}">${o.t}</span>`).join('');
 

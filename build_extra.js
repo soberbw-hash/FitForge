@@ -31,8 +31,8 @@ const MUSCLE_ZH = {
   'latissimus dorsi': '背阔肌', 'abdominals': '腹部'
 };
 const PART_ZH = {
-  waist: '腰腹', 'upper legs': '大腿', back: '背部', 'lower legs': '小腿', chest: '胸部',
-  'upper arms': '上臂', cardio: '有氧', shoulders: '肩部', 'lower arms': '前臂', neck: '颈部'
+  waist: '腰腹', 'upper legs': '腿部', back: '背部', 'lower legs': '小腿', chest: '胸部',
+  'upper arms': '手臂', cardio: '有氧', shoulders: '肩部', 'lower arms': '前臂', neck: '颈部'
 };
 const EQUIP_ZH = {
   'body weight': '自重', cable: '绳索', 'leverage machine': '固定器械', assisted: '辅助器械',

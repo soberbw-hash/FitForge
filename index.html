@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light dark">
 <title>FitForge · 健身动作库与训练计划</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23E8502E'/%3E%3Cpath d='M20 16h26v8H30v7h14v8H30v13H20z' fill='white'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -102,6 +103,12 @@
       <div class="result-count"><b id="resultNum">0</b> 个动作</div>
 
       <div class="filters-adv" id="filtersAdv">
+        <select class="sel" id="equipTypeSelect" onchange="doFilter()" aria-label="按训练方式筛选">
+          <option value="all">全部训练方式</option>
+          <option value="fixed">固定器械</option>
+          <option value="free">自由器械</option>
+          <option value="body">自重训练</option>
+        </select>
         <select class="sel" id="equipSelect" onchange="doFilter()" aria-label="按器械筛选"><option value="all">全部器械</option></select>
         <select class="sel" id="diffSelect" onchange="doFilter()" aria-label="按难度筛选">
           <option value="all">全部难度</option>

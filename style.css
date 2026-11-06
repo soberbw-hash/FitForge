@@ -323,33 +323,7 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
   object-fit: contain;
   display: block;
 }
-/* 线上版动作图：站点自带的 8 帧 sprite 循环播放，首帧由内嵌缩略图即时顶上 */
-.anim-thumb {
-  position: relative;
-  width: 100%; height: 100%;
-  aspect-ratio: 1 / 1;
-  overflow: hidden;
-  background-color: #FFFFFF;
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: contain;
-}
-.anim-thumb .anim-sheet {
-  position: absolute; top: 0; left: 0;
-  width: 800%; height: 100%;
-  max-width: none; max-height: none;
-  object-fit: fill;
-  display: block;
-  animation: ff-sprite 1.12s steps(8) infinite;
-  will-change: transform;
-}
-@keyframes ff-sprite {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-100%); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .anim-thumb .anim-sheet { animation: none; }
-}
+/* 动作图统一为站点自带的原始 GIF，浏览器原生播放、原生懒加载 */
 .card-tags {
   display: flex; align-items: center; gap: 5px;
   flex-shrink: 0;

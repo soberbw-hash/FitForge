@@ -331,17 +331,22 @@ function searchScore(ex, q) {
   const name = ex.name.toLowerCase(), en = (ex.nameEn || '').toLowerCase();
   const extra = EXERCISE_EXTRA[ex.id] || {};
   const aliases = (extra.a || []).join(' ').toLowerCase(), tags = (extra.g || []).join(' ').toLowerCase();
+  /* 让「固定器械 / 自由器械 / 自重 / 胸部」这类分类词也能直接搜到动作 */
+  const cats = [
+    (EQUIPMENT[ex.equipment] || {}).name,
+    (EQUIP_TYPES[equipTypeOf(ex)] || {}).name,
+    PART_ZH[ex.category] || CATEGORY[ex.category]
+  ].filter(Boolean).join(' ').toLowerCase();
+  const hay = name + ' ' + en + ' ' + aliases + ' ' + tags + ' ' + cats;
   const parts = q.split(/\s+/).filter(Boolean);
-  return parts.every(p =>
-    name.includes(p) || en.includes(p) || aliases.includes(p) || tags.includes(p) ||
-    fuzzyHit(name, p) || fuzzyHit(en, p)
-  );
+  return parts.every(p => hay.includes(p) || fuzzyHit(name, p) || fuzzyHit(en, p));
 }
 
 const _origGetFiltered = getFiltered;
 getFiltered = function () {
   const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
   const eq = document.getElementById('equipSelect')?.value || 'all';
+  const et = document.getElementById('equipTypeSelect')?.value || 'all';
   const diff = document.getElementById('diffSelect')?.value || 'all';
   const part = document.getElementById('partSelect')?.value || 'all';
   const tag = document.getElementById('tagSelect')?.value || 'all';
@@ -350,6 +355,7 @@ getFiltered = function () {
     if (q && !searchScore(ex, q)) return false;
     if (state.muscleFilter !== 'all' && !ex.primary.includes(state.muscleFilter) && !ex.secondary.includes(state.muscleFilter)) return false;
     if (eq !== 'all' && ex.equipment !== eq) return false;
+    if (et !== 'all' && equipTypeOf(ex) !== et) return false;
     if (diff !== 'all' && ex.difficulty !== diff) return false;
     if (state.forceFilter !== 'all' && ex.force !== state.forceFilter) return false;
     if (state.mechanicFilter !== 'all' && ex.mechanic !== state.mechanicFilter) return false;
@@ -364,7 +370,7 @@ getFiltered = function () {
 };
 
 function resetFilters() {
-  ['searchInput', 'equipSelect', 'diffSelect', 'forceSelect', 'mechSelect', 'partSelect', 'tagSelect', 'sortSelect'].forEach(id => {
+  ['searchInput', 'equipTypeSelect', 'equipSelect', 'diffSelect', 'forceSelect', 'mechSelect', 'partSelect', 'tagSelect', 'sortSelect'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     if (el.tagName === 'INPUT') el.value = '';
@@ -566,7 +572,7 @@ document.addEventListener('error', function (e) {
 /* ═════════ 筛选折叠：把首屏还给动作卡 ═════════ */
 function activeFilterCount() {
   let n = 0;
-  ['equipSelect', 'diffSelect', 'forceSelect', 'mechSelect', 'partSelect', 'tagSelect'].forEach(id => {
+  ['equipTypeSelect', 'equipSelect', 'diffSelect', 'forceSelect', 'mechSelect', 'partSelect', 'tagSelect'].forEach(id => {
     const el = document.getElementById(id);
     if (el && el.value && el.value !== 'all') n++;
   });
