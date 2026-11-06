@@ -161,10 +161,14 @@ function animFrames() {
   return data;
 }
 
-function loadAnimSheet(id) {
+async function loadAnimSheet(id) {
+  let src = animFrames()[id];
+  /* 线上版动画帧按需分块加载，离线版全部内嵌可直接使用 */
+  if (!src && typeof window.ensureAnimSheet === 'function') {
+    src = await window.ensureAnimSheet(id);
+  }
+  if (!src) return null;
   return new Promise(resolve => {
-    const src = animFrames()[id];
-    if (!src) { resolve(null); return; }
     const img = new Image();
     img.onload = () => resolve(img);
     img.onerror = () => resolve(null);
