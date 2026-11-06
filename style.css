@@ -1418,7 +1418,7 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
 }
 
 /* ═══════════════════════════════════════════════════════════
-   难度星级 · 站内热度 · 常驻排序
+   难度星级 · 热门度 · 常驻排序
    ═══════════════════════════════════════════════════════════ */
 .card-tags { flex-wrap: wrap; row-gap: 4px; }
 .badge .stars { font-size: 11px; letter-spacing: .5px; line-height: 1; font-style: normal; }

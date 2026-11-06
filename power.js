@@ -344,7 +344,6 @@ function searchScore(ex, q) {
 
 const _origGetFiltered = getFiltered;
 getFiltered = function () {
-  try { FFHeat.sync(); } catch (e) {}
   const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
   const eq = document.getElementById('equipSelect')?.value || 'all';
   const et = document.getElementById('equipTypeSelect')?.value || 'all';

@@ -219,7 +219,6 @@ function doFilter() {
 }
 
 function getFiltered() {
-  try { FFHeat.sync(); } catch (e) {}
   const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
   const eq = document.getElementById('equipSelect')?.value || 'all';
   const et = document.getElementById('equipTypeSelect')?.value || 'all';
@@ -337,7 +336,6 @@ function renderFavorites() {
 function showDetail(id) {
   const ex = EXERCISES.find(e => e.id === id);
   if (!ex) return;
-  try { FFHeat.noteView(ex.id); } catch (e) {}
 
   const eq = EQUIPMENT[ex.equipment]?.name || ex.equipment;
   const et = (EQUIP_TYPES[equipTypeOf(ex)] || {}).name || '';
@@ -376,9 +374,9 @@ function showDetail(id) {
         <div class="detail-tags">${tags}</div>
         <div class="detail-rating">
           <span class="dr-box"><span class="dr-l">难度星级</span>${starHTML(ex)}<b>${diff}</b></span>
-          <span class="dr-box"><span class="dr-l">站内热度</span><b class="dr-heat"><span class="heat-lb">热</span>${FFHeat.score(ex)}</b><small>/100</small></span>
+          <span class="dr-box"><span class="dr-l">热门度</span><b class="dr-heat"><span class="heat-lb">热</span>${FFHeat.score(ex)}</b><small>/100</small></span>
         </div>
-        <div class="dr-note">热度 = 动作通用度 + 你的收藏、计划、训练与查看次数，全部在本地计算</div>
+        <div class="dr-note">按动作本身估算（复合动作 / 基础主项 / 肌群覆盖 / 器械易得度），与你的训练数据无关</div>
         <div class="train-grid">
           <div class="tg"><div class="tg-v">${ex.setRange}</div><div class="tg-l">建议组数</div></div>
           <div class="tg"><div class="tg-v">${ex.repRange}</div><div class="tg-l">建议次数</div></div>

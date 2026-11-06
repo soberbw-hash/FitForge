@@ -1,10 +1,12 @@
 /* ═══════════════════════════════════════════════════════════
-   FitForge — 难度星级与站内热度
+   FitForge — 难度星级与热门度
    ---------------------------------------------------------------
-   全部由本地数据计算，没有任何联网统计、没有随机编造的人气值：
    · 星级 = 动作库自带的难度字段（初级 1 星 / 中级 2 星 / 高级 3 星）
-   · 热度 = 动作通用度（复合、经典主项、肌群覆盖、器械易得、要领完整）
-            + 你自己的使用频次（收藏 / 周计划 / 训练记录 / 详情查看）
+   · 热门度 = 只由「动作本身」的属性静态估算的通用 / 常见程度：
+       是否复合动作、是否基础主项、参与肌群覆盖、器械易得度、要领完整度
+     不含任何使用者数据：不读收藏、周计划、训练记录、浏览记录，
+     不联网、不统计、不随时间变化 —— 任何人、任何设备看到的分数与排名完全一致。
+     它是通用度估算，不是网站真实点击量或人气排行榜。
    ═══════════════════════════════════════════════════════════ */
 
 const DIFF_STARS = { beginner: 1, intermediate: 2, advanced: 3 };
@@ -35,23 +37,15 @@ const EQUIP_HEAT = {
 };
 
 const FFHeat = (() => {
-  let base = null;      // id -> 通用度基准分
-  let dyn = null;       // id -> 本地行为加权分
-  let views = null;     // id -> 详情查看次数
+  let base = null;   // id -> 静态通用度分数，只算一次
 
-  function readViews() {
-    if (views) return views;
-    try { views = JSON.parse(localStorage.getItem('ff_views') || '{}') || {}; }
-    catch (e) { views = {}; }
-    return views;
-  }
-
+  /* 纯属性打分：同一个动作在任何时候、任何账号下结果都相同 */
   function baseScore(ex) {
     const extra = (typeof EXERCISE_EXTRA !== 'undefined' && EXERCISE_EXTRA[ex.id]) || {};
     const tags = extra.g || [];
     const muscles = new Set([].concat(ex.primary || [], ex.secondary || []));
     let s = 24;
-    if (ex.mechanic === 'compound') s += 10;                  // 多关节复合动作，通用度更高
+    if (ex.mechanic === 'compound') s += 10;                  // 多关节复合动作
     s += Math.min(muscles.size, 6) * 2.5;                     // 参与肌群覆盖
     s += EQUIP_HEAT[ex.equipment] != null ? EQUIP_HEAT[ex.equipment] : 4;
     if (CLASSIC_NAMES.has(ex.name)) s += 22;                  // 基础主项
@@ -60,50 +54,26 @@ const FFHeat = (() => {
     if (tags.includes('居家可练')) s += 4;
     s += ({ beginner: 5, intermediate: 2, advanced: 0 }[ex.difficulty] || 0);
     if (ex.category === 'cardio') s += 3;
-    return Math.min(96, s);
-  }
-
-  function build() {
-    if (base) return;
-    base = {};
-    EXERCISES.forEach(ex => { base[ex.id] = baseScore(ex); });
-  }
-
-  /* 每次筛选前重算本地行为分量（收藏、计划、训练、查看） */
-  function sync() {
-    build();
-    const d = {};
-    const add = (id, v) => { if (id) d[id] = (d[id] || 0) + v; };
-    try { (state.favorites || []).forEach(id => add(id, 18)); } catch (e) {}
-    try {
-      Object.values(state.weeklyPlan || {}).forEach(day =>
-        (day.exercises || []).forEach(it => add(it.id, 8)));
-    } catch (e) {}
-    try {
-      (state.trainingLog || []).forEach(entry =>
-        (entry.exercises || []).forEach(it => add(it.id, 6)));
-    } catch (e) {}
-    const v = readViews();
-    Object.keys(v).forEach(id => add(id, Math.min(Number(v[id]) || 0, 10) * 1.5));
-    dyn = d;
+    return Math.max(1, Math.min(96, Math.round(s)));
   }
 
   function score(ex) {
-    if (!dyn) sync();
-    return Math.max(1, Math.min(99, Math.round((base[ex.id] || 40) + (dyn[ex.id] || 0))));
+    if (!ex) return 0;
+    if (!base) {
+      base = Object.create(null);
+      EXERCISES.forEach(e => { base[e.id] = baseScore(e); });
+    }
+    return base[ex.id] != null ? base[ex.id] : baseScore(ex);
   }
 
-  function noteView(id) {
-    const v = readViews();
-    v[id] = Math.min((Number(v[id]) || 0) + 1, 99);
-    try { localStorage.setItem('ff_views', JSON.stringify(v)); } catch (e) {}
-    sync();
-  }
+  /* 兼容旧调用：热门度是静态的，没有任何需要重算或同步的东西 */
+  function sync() {}
 
-  return { sync, score, noteView };
+  return { score, sync };
 })();
 
-/* 卡片上的热度小胶囊 */
+/* 卡片上的热门度小胶囊 */
 function heatPillHTML(ex) {
-  return `<span class="heat-pill" title="站内热度 ${FFHeat.score(ex)}／100 · 动作通用度 + 你的使用频次"><span class="heat-lb">热</span>${FFHeat.score(ex)}</span>`;
+  const n = FFHeat.score(ex);
+  return `<span class="heat-pill" title="热门度 ${n}／100 · 按动作本身估算的通用程度，与你的训练数据无关"><span class="heat-lb">热</span>${n}</span>`;
 }
