@@ -375,9 +375,10 @@ function showDetail(id) {
         <div class="detail-tags">${tags}</div>
         <div class="detail-rating">
           <span class="dr-box" title="原始动作库无难度字段，星级由本地按动作特征估算"><span class="dr-l">难度星级</span>${starHTML(ex)}<b>${diff}</b></span>
-          <span class="dr-box"><span class="dr-l">热门度</span><b class="dr-heat"><span class="heat-lb">热</span>${FFHeat.score(ex)}</b><small>/100</small></span>
+          <span class="dr-box" title="基于公开训练数据榜单静态合成，实证动作 ≥56 分；不是本站点击量"><span class="dr-l">热门度</span><b class="dr-heat"><span class="heat-lb">热</span>${FFHeat.score(ex)}</b><small>/100</small></span>
         </div>
-        <div class="dr-note">按动作本身估算（复合动作 / 基础主项 / 肌群覆盖 / 器械易得度），与你的训练数据无关</div>
+        <div class="dr-src">${heatSourcesHTML(ex)}</div>
+        <div class="dr-note">${(FFHeat.meta() || {}).sources || 6} 份公开榜单静态合成 · 实证 ≥56 分 · 不联网、不更新</div>
         <div class="train-grid">
           <div class="tg"><div class="tg-v">${ex.setRange}</div><div class="tg-l">建议组数</div></div>
           <div class="tg"><div class="tg-v">${ex.repRange}</div><div class="tg-l">建议次数</div></div>

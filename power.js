@@ -74,6 +74,11 @@ function renderTools() {
       <p class="tool-note">文件只在本机生成，不上传任何服务器。换电脑或重装浏览器前记得导一份。</p>
       <div id="backupInfo"></div>
     </section>
+
+    <section class="tool-card">
+      <div class="tool-h"><span class="tool-ic">${ic('chart')}</span><div><h3>热门度是怎么来的</h3><p>联网调研一次，固化成死数据；网站运行时完全离线</p></div></div>
+      ${popularitySourcesHTML()}
+    </section>
   </div>`;
   ['calc1RM', 'calcPlates', 'calcBody', 'calcHR', 'calcVol'].forEach(f => { try { window[f](); } catch (e) {} });
   const bi = document.getElementById('backupInfo');

@@ -1,12 +1,17 @@
 /* ═══════════════════════════════════════════════════════════
    FitForge — 难度星级与热门度
    ---------------------------------------------------------------
-   · 星级 = 动作库自带的难度字段（初级 1 星 / 中级 2 星 / 高级 3 星）
-   · 热门度 = 只由「动作本身」的属性静态估算的通用 / 常见程度：
-       是否复合动作、是否基础主项、参与肌群覆盖、器械易得度、要领完整度
-     不含任何使用者数据：不读收藏、周计划、训练记录、浏览记录，
-     不联网、不统计、不随时间变化 —— 任何人、任何设备看到的分数与排名完全一致。
-     它是通用度估算，不是网站真实点击量或人气排行榜。
+   · 星级   = 动作库无难度字段，按动作特征本地估算（1/2/3 星），已标注
+   · 热门度 = 2026-11-07 联网调研的 6 份公开训练数据榜单，在构建期
+             固化进 popularity.js 的静态结果：
+               StrengthLog（70 万用户训练日志）/ Trainera（教练处方）
+               BurnFit（繁中真实训练数据）/ Jefit（千万用户）
+               SisuLift（自重动作）/ Age UK（民意调查）
+             实证动作 ≥56 分并标注命中来源；榜单未覆盖的动作按
+             同器械同肌群邻居推断，≤55 分并标注为推断值。
+   · 完全静态：不联网、不实时更新、不随时间变化、不读收藏 / 计划 /
+     训练记录 / 浏览记录，任何人在任何设备看到的分数完全一致。
+     它是跨源热度指数，不是本站点击量，也不是任何单一平台的占比。
    ═══════════════════════════════════════════════════════════ */
 
 const DIFF_STARS = { beginner: 1, intermediate: 2, advanced: 3 };
@@ -18,60 +23,84 @@ function starHTML(ex) {
   return `<span class="stars" aria-label="难度 ${n} 星">${'★'.repeat(n)}<i>${'☆'.repeat(3 - n)}</i></span>`;
 }
 
-/* 经典主项白名单：按动作库里实际存在的基础动作名精确匹配，
-   不靠模糊关键词，避免「单腿深蹲 / 如厕式深蹲」这类小众变式混进热门榜 */
-const CLASSIC_NAMES = new Set([
-  '俯卧撑','引体向上','卷腹','波比跳','登山跑','跳绳','俄罗斯转体',
-  '死虫式','熊爬','农夫走','悬垂抬腿','全程平板','站姿提踵','壶铃摆荡',
-  '杠铃深蹲','杠铃前蹲','杠铃卧推','杠铃硬拉','杠铃弯举','杠铃臀桥','杠铃箭步蹲',
-  '哑铃深蹲','哑铃卧推','哑铃硬拉','哑铃推举','哑铃箭步蹲','哑铃侧平举',
-  '绳索下压','绳索下拉','绳索弯举',
-  'EZ杠弯举','蝴蝶式','杠铃俯身划船','哑铃俯身划船'
-]);
-const EQUIP_HEAT = {
-  bodyweight: 14, dumbbell: 12, weighted: 10, band: 9, barbell: 8,
-  medicine_ball: 7, stability_ball: 6, rope: 6, kettlebell: 6,
-  cable: 5, roller: 5, machine: 4, smith: 3, other: 3
-};
-
 const FFHeat = (() => {
-  let base = null;   // id -> 静态通用度分数，只算一次
+  function table() { return typeof POPULARITY !== 'undefined' ? POPULARITY : null; }
+  function srcMap() {
+    const m = Object.create(null);
+    if (typeof POP_SOURCES !== 'undefined') POP_SOURCES.forEach(s => { m[s.id] = s; });
+    return m;
+  }
+  const sm = srcMap();
 
-  /* 纯属性打分：同一个动作在任何时候、任何账号下结果都相同 */
-  function baseScore(ex) {
+  /* 兜底：正常情况 1324 个动作全部在静态表里，这里只防数据缺失 */
+  function fallback(ex) {
     const extra = (typeof EXERCISE_EXTRA !== 'undefined' && EXERCISE_EXTRA[ex.id]) || {};
     const tags = extra.g || [];
-    const muscles = new Set([].concat(ex.primary || [], ex.secondary || []));
     let s = 24;
-    if (ex.mechanic === 'compound') s += 10;                  // 多关节复合动作
-    s += Math.min(muscles.size, 6) * 2.5;                     // 参与肌群覆盖
-    s += EQUIP_HEAT[ex.equipment] != null ? EQUIP_HEAT[ex.equipment] : 4;
-    if (CLASSIC_NAMES.has(ex.name)) s += 22;                  // 基础主项
-    s -= Math.max(0, ex.name.length - 7) * 1.0;               // 名称越长的变式越小众
-    s += Math.min((ex.steps || []).length, 8) * 1.2;          // 动作要领完整度
-    if (tags.includes('居家可练')) s += 4;
-    /* 不再叠加难度：难度本身是本地估算值，再拿来加权会让热门榜随估算口径漂移 */
-    if (ex.category === 'cardio') s += 3;
-    return Math.max(1, Math.min(96, Math.round(s)));
+    if (ex.mechanic === 'compound') s += 8;
+    s += Math.min(new Set([].concat(ex.primary || [], ex.secondary || [])).size, 6) * 2;
+    s += Math.min((ex.steps || []).length, 8) * 1.2;
+    if (tags.indexOf('居家可练') >= 0) s += 4;
+    s -= Math.max(0, (ex.name || '').length - 8) * 0.9;
+    return Math.max(10, Math.min(55, Math.round(s)));
   }
 
-  function score(ex) {
-    if (!ex) return 0;
-    if (!base) {
-      base = Object.create(null);
-      EXERCISES.forEach(e => { base[e.id] = baseScore(e); });
-    }
-    return base[ex.id] != null ? base[ex.id] : baseScore(ex);
+  function info(ex) {
+    const empty = { score: 0, evidence: false, sources: [], approx: false };
+    if (!ex) return empty;
+    const t = table(), p = t && t[ex.id];
+    if (!p) return { score: fallback(ex), evidence: false, sources: [], approx: false };
+    return {
+      score: p.s,
+      evidence: !!p.k,
+      sources: (p.r || []).map(id => sm[id]).filter(Boolean),
+      approx: !!p.a
+    };
   }
 
-  /* 兼容旧调用：热门度是静态的，没有任何需要重算或同步的东西 */
+  function score(ex) { return info(ex).score; }
+  /* 兼容旧调用：热门度是构建期死数据，运行时没有任何需要重算的东西 */
   function sync() {}
+  function meta() { return typeof POP_META !== 'undefined' ? POP_META : null; }
 
-  return { score, sync };
+  return { score, info, sync, meta };
 })();
 
-/* 卡片上的热门度小胶囊 */
+/* 卡片上的热门度小胶囊：实证动作多一个实心点，一眼可辨 */
 function heatPillHTML(ex) {
-  const n = FFHeat.score(ex);
-  return `<span class="heat-pill" title="热门度 ${n}／100 · 按动作本身估算的通用程度，与你的训练数据无关"><span class="heat-lb">热</span>${n}</span>`;
+  const i = FFHeat.info(ex);
+  const label = i.evidence
+    ? (i.sources.length ? i.sources.length + ' 份公开榜单实证' : '公开榜单实证')
+    : '同类动作推断';
+  const approx = i.approx ? ' · 同族近似' : '';
+  const tip = `热门度 ${i.score}／100 · ${label}${approx}｜构建时固化，不联网、不随使用变化`;
+  return `<span class="heat-pill${i.evidence ? ' is-evidence' : ''}" title="${tip}">`
+    + (i.evidence ? '<i class="heat-dot"></i>' : '')
+    + `<span class="heat-lb">热</span>${i.score}</span>`;
+}
+
+/* 详情弹窗里的来源小标签 */
+function heatSourcesHTML(ex) {
+  const i = FFHeat.info(ex);
+  if (!i.evidence) return '<span class="hs-item hs-infer">同类动作推断</span>';
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  return i.sources.map(s =>
+    `<span class="hs-item" title="${esc(s.name)}｜${esc(s.sample)}">${esc(s.short)} ${esc(String(s.date).slice(0, 4))}</span>`
+  ).join('') + (i.approx ? '<span class="hs-item hs-approx">同族近似</span>' : '');
+}
+
+/* 工具箱：完整来源清单（纯静态展示，点击打开原页面，不影响离线使用） */
+function popularitySourcesHTML() {
+  if (typeof POP_SOURCES === 'undefined') return '';
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  const m = FFHeat.meta();
+  const rows = POP_SOURCES.map(s => `
+    <a class="pop-src" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">
+      <span class="pop-src-l"><b>${esc(s.short)}</b><small>${esc(s.date)} · 权重 ${s.w.toFixed(2)}</small></span>
+      <span class="pop-src-r"><span>${esc(s.sample)}</span><small>${esc(s.metric)}</small></span>
+    </a>`).join('');
+  return `<p class="tool-note">${esc(m ? m.method : '')}</p>
+    <div class="pop-src-list">${rows}</div>
+    <p class="tool-note">${esc(m ? m.limitation : '')}</p>
+    ${m ? `<p class="tool-note">调研于 ${esc(m.built)} 固化：${m.sources} 份来源 / ${m.boards} 张榜单 / ${m.rows} 条记录 → ${m.evidence} 个动作有实证，其余 ${m.inferred} 个标记为推断。本站运行时不联网。</p>` : ''}`;
 }

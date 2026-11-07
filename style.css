@@ -1466,3 +1466,34 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
 .dr-note { font-size: 11px; line-height: 1.5; color: var(--t4); margin-bottom: 14px; }
 [data-theme="dark"] .dr-box .stars { color: #E3BC5E; }
 [data-theme="dark"] .dr-box .dr-heat { color: #F0B26A; }
+
+/* 热门度：实证动作加实心点并提亮底色，推断动作保持弱显示 */
+.heat-pill.is-evidence { color: #8A4710; background: rgba(255,235,205,.94); border-color: rgba(210,120,40,.42); }
+[data-theme="dark"] .heat-pill.is-evidence { color: #FFC987; background: rgba(74,44,14,.9); border-color: rgba(240,178,106,.45); }
+.heat-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+.dr-src { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 0 7px; }
+.hs-item {
+  font-size: 10px; line-height: 1.6; padding: 1px 7px; border-radius: 20px;
+  color: var(--t2); background: var(--surface-2); border: 1px solid var(--line);
+}
+.hs-item.hs-infer { color: var(--t3); }
+.hs-item.hs-approx { color: #A05A18; border-color: rgba(200,130,40,.38); }
+[data-theme="dark"] .hs-item.hs-approx { color: #F0B26A; }
+
+.pop-src-list { display: grid; gap: 7px; margin-top: 12px; }
+.pop-src {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--surface-2); text-decoration: none; color: inherit;
+}
+.pop-src:hover { border-color: var(--accent-line); }
+.pop-src-l { flex: 0 0 auto; min-width: 108px; }
+.pop-src-l b { display: block; font-size: 12px; font-weight: 650; color: var(--t1); }
+.pop-src-l small, .pop-src-r small { display: block; font-size: 10px; color: var(--t4); margin-top: 2px; }
+.pop-src-r { text-align: right; min-width: 0; }
+.pop-src-r span { display: block; font-size: 11px; color: var(--t2); }
+@media (max-width: 620px) {
+  .pop-src { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .pop-src-r { text-align: left; }
+}
