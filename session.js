@@ -1,8 +1,7 @@
 /* ═══════════════════════════════════════════════════════════
- * 引导式跟练（借鉴 openGym / Strong / Hevy）
- * 从周计划或今日训练卡一键进入：大 GIF 循环 → 分步要领 → 逐组打勾
- * → 自动休息计时 → PR 检测 → 下次重量建议 → 写入训练记录
- * 全程本地，状态可中断续练
+ * 跟练演示：从周计划或今日训练卡进入，大 GIF 循环 → 分步要领 → 逐组打勾 → 休息计时
+ * 只是按计划看动作的引导器：不记录成绩、不写训练日志、不保存个人数据
+ * 仅临时存一下「看到第几个动作」，方便中断续看
  * ═══════════════════════════════════════════════════════════ */
 
 const SESSION = {
@@ -12,34 +11,6 @@ const SESSION = {
 
 function ssGet(k, d) { try { return _get(k, d); } catch (e) { return d; } }
 function ssSet(k, v) { try { _set(k, v); } catch (e) {} }
-
-function e1rm(weight, reps) {
-  const w = parseFloat(weight) || 0, r = parseInt(reps) || 0;
-  if (!w || !r) return 0;
-  return Math.round(w * (1 + r / 30) * 10) / 10;   // Epley
-}
-
-function getPRs() { return ssGet('ff_pr', {}) || {}; }
-function savePRs(p) { ssSet('ff_pr', p); }
-
-/* 从历史记录里找某动作上次成绩 / 历史最佳 */
-function lastLift(id) {
-  const logs = state.trainingLog || [];
-  for (const entry of logs) {
-    const hit = (entry.exercises || []).find(x => x.id === id);
-    if (hit) return hit;
-  }
-  return null;
-}
-function bestLift(id) {
-  let best = null;
-  (state.trainingLog || []).forEach(entry => (entry.exercises || []).forEach(x => {
-    if (x.id !== id) return;
-    const score = parseFloat(x.weight) || 0;
-    if (!best || score > best.weight) best = { weight: score, reps: parseInt(x.reps) || 0, date: entry.date };
-  }));
-  return best;
-}
 
 function beep(freq, ms) {
   try {
@@ -94,10 +65,9 @@ function startSession(dayKey, resume) {
     SESSION.items = plan.map(it => {
       const ex = EXERCISES.find(e => e.id === it.id);
       if (!ex) return null;
-      const last = lastLift(it.id);
       const n = Math.max(1, Math.min(8, parseInt(it.sets) || 3));
       const reps = String(it.reps || ex.repRange || '10').replace(/[^0-9].*$/, '') || '10';
-      const weight = (it.weight !== '' && it.weight != null) ? it.weight : (last && last.weight ? last.weight : '');
+      const weight = (it.weight !== '' && it.weight != null) ? it.weight : '';
       return {
         id: it.id, name: ex.name, gif: ex.gifUrl, rest: ex.restSec || 60,
         target: (EXERCISE_EXTRA[it.id] || {}).t || '',
@@ -176,7 +146,6 @@ function renderSession() {
   const doneCount = SESSION.items.reduce((n, x) => n + x.sets.filter(s => s.done).length, 0);
   const allSets = SESSION.items.reduce((n, x) => n + x.sets.length, 0);
   const pct = allSets ? Math.round(doneCount / allSets * 100) : 0;
-  const last = lastLift(it.id), best = bestLift(it.id);
 
   if (head) head.innerHTML = `
     <div class="ss-title"><b>${DAY_NAMES[SESSION.day] ? DAY_NAMES[SESSION.day] + ' · ' : ''}${state.weeklyPlan[SESSION.day]?.name || '训练'}</b>
@@ -194,10 +163,6 @@ function renderSession() {
       <div class="ss-meta">${it.sets.length} 组 × ${it.sets[0].reps} 次 · ${it.equip}${it.target ? ' · ' + it.target : ''} · 组间 ${it.rest}s</div>
       ${it.steps.length ? `<details class="ss-steps" open><summary>怎么做 · ${it.steps.length} 步 ${ic('arrow-right')}</summary>
         <ol>${it.steps.map(s => `<li>${s}</li>`).join('')}</ol></details>` : ''}
-      <div class="ss-history">
-        ${last ? `<span>上次 <b>${last.sets}×${last.reps}${last.weight ? ' @ ' + last.weight + 'kg' : ''}</b></span>` : '<span>首次记录这个动作</span>'}
-        ${best && best.weight ? `<span>历史最佳 <b>${best.weight}kg</b>${best.reps ? ` · e1RM ${e1rm(best.weight, best.reps)}kg` : ''}</span>` : ''}
-      </div>
     </div>
     <div class="ss-sets">
       <div class="ss-sets-head"><span>组</span><span>次数</span><span>重量 kg</span><span>努力度</span><span>完成</span></div>
@@ -286,68 +251,35 @@ function nextSessionExercise() {
   }
 }
 
-/* ─── 结束 & 汇总 ─── */
+/* ─── 结束 & 本次汇总（不写入任何存储） ─── */
 function finishSession() {
-  const prs = getPRs();
-  const prList = [], advice = [];
   let volume = 0, doneSets = 0;
-  const exercises = SESSION.items.map(it => {
+  SESSION.items.forEach(it => {
     const done = it.sets.filter(s => s.done);
-    const reps = done.length ? Math.round(done.reduce((n, s) => n + (parseInt(s.reps) || 0), 0) / done.length) : 0;
-    const weight = done.length ? Math.max(...done.map(s => parseFloat(s.weight) || 0)) : 0;
-    const rpe = done.length ? Math.max(...done.map(s => parseInt(s.rpe) || 0)) : 0;
     doneSets += done.length;
     volume += done.reduce((n, s) => n + (parseInt(s.reps) || 0) * (parseFloat(s.weight) || 0), 0);
-
-    const best = bestLift(it.id);
-    const isPR = weight > 0 && (!best || weight > best.weight);
-    if (isPR) {
-      prs[it.id] = { weight, reps, e1rm: e1rm(weight, reps), date: new Date().toLocaleDateString('zh-CN') };
-      prList.push({ name: it.name, weight, reps });
-    }
-    // 线性进阶建议：全部组完成且留有余力
-    if (done.length === it.sets.length && done.length > 0 && (rpe === 0 || rpe <= 8)) {
-      if (weight > 0) advice.push({ name: it.name, text: '下次加 ' + (weight >= 40 ? 2.5 : 1.25) + 'kg → ' + (weight + (weight >= 40 ? 2.5 : 1.25)) + 'kg' });
-      else advice.push({ name: it.name, text: '下次加 2 次 → ' + (reps + 2) + ' 次/组' });
-    }
-    return { id: it.id, name: it.name, sets: done.length || it.sets.length, reps, weight, rpe: rpe || '' };
   });
 
   const mins = Math.max(1, Math.round((Date.now() - SESSION.started) / 60000));
-  const entry = {
-    date: new Date().toLocaleDateString('zh-CN'),
-    timestamp: Date.now(), duration: mins, volume: Math.round(volume),
-    exercises
-  };
-  state.trainingLog.unshift(entry);
-  if (state.trainingLog.length > 200) state.trainingLog = state.trainingLog.slice(0, 200);
-  ssSet('ff_log', state.trainingLog);
-  savePRs(prs);
   ssSet('ff_session', { done: true, at: Date.now() });
 
   SESSION.finished = true; SESSION.on = false;
   clearInterval(SESSION.restTimer); releaseWake();
   beep(1046, 200); setTimeout(() => beep(1318, 300), 180);
 
-  document.getElementById('sessionHead').innerHTML = '<div class="ss-title"><b>训练完成</b><span>干得漂亮</span></div>';
+  document.getElementById('sessionHead').innerHTML = '<div class="ss-title"><b>跟练结束</b><span>本次结果不保存</span></div>';
   document.getElementById('sessionBody').innerHTML = `
     <div class="ss-done">
       <div class="ss-done-icon">${ic('check')}</div>
-      <h2>今天练完了</h2>
+      <h2>这一轮看完了</h2>
       <div class="ss-sum">
-        <div><b>${exercises.length}</b><span>动作</span></div>
+        <div><b>${SESSION.items.length}</b><span>动作</span></div>
         <div><b>${doneSets}</b><span>完成组数</span></div>
         <div><b>${mins}</b><span>分钟</span></div>
         <div><b>${Math.round(volume)}</b><span>总容量 kg</span></div>
       </div>
-      ${prList.length ? `<div class="ss-pr"><h4>${ic('zap')} 新纪录</h4>${prList.map(p =>
-        `<div><b>${p.name}</b> ${p.weight}kg × ${p.reps} 次 · e1RM ${e1rm(p.weight, p.reps)}kg</div>`).join('')}</div>` : ''}
-      ${advice.length ? `<div class="ss-advice"><h4>${ic('rotate')} 下次进阶建议</h4>${advice.slice(0, 6).map(a =>
-        `<div><b>${a.name}</b> ${a.text}</div>`).join('')}</div>` : ''}
-      <p class="ss-note">记录已保存到「训练记录」与「概览」</p>
+      <p class="ss-note">本站不记录训练数据，以上只在本次显示，关掉就没了。想留档请导出训练卡图片。</p>
     </div>`;
   document.getElementById('sessionFoot').innerHTML = `
-    <button class="btn btn-ghost" onclick="closeSession();switchView('log')">查看记录</button>
     <button class="btn btn-solid" onclick="closeSession()">完成</button>`;
-  try { renderLogView(); renderStats(); } catch (e) {}
 }

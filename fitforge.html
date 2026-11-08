@@ -1082,6 +1082,7 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
 
 /* 工具箱 */
 .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 14px; }
+.tool-grid { align-items: start; }
 .tool-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-xl); padding: 20px 22px; }
 .tool-h { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
 .tool-ic { flex: 0 0 36px; height: 36px; border-radius: 11px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
@@ -1426,6 +1427,14 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
   .body-svg { max-width: 300px; }
 }
 
+/* 说明类卡片在宽屏占更宽的列，避免把同行计算卡拉出大片空白 */
+@media (min-width: 1200px) {
+  .tool-card.wide { grid-column: span 2; }
+  .tool-card.full { grid-column: 1 / -1; }
+  .tool-card.full .pop-src-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tool-card.full .pop-src { padding: 10px 14px; }
+}
+
 /* ═══════════════════════════════════════════════════════════
    难度星级 · 热门度 · 常驻排序
    ═══════════════════════════════════════════════════════════ */
@@ -1507,6 +1516,25 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
   .pop-src-r { text-align: left; }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   本机数据说明（无账号 / 无服务器）
+   ═══════════════════════════════════════════════════════════ */
+.local-note {
+  display: flex; align-items: flex-start; gap: 9px;
+  padding: 11px 14px; margin-bottom: 16px;
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--t3); font-size: 12.5px; line-height: 1.75;
+}
+.local-note .ic { width: 15px; height: 15px; flex-shrink: 0; margin-top: 3px; color: var(--accent); }
+.local-note b { color: var(--t2); font-weight: 600; }
+.data-note p { margin: 0 0 8px; font-size: 12.5px; line-height: 1.8; color: var(--t3); }
+.data-note p:last-child { margin-bottom: 0; }
+.data-note b { color: var(--t2); font-weight: 600; }
+@media (max-width: 620px) {
+  .local-note { padding: 10px 12px; font-size: 12px; }
+}
+
 </style>
 </head>
 <body>
@@ -1557,16 +1585,12 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
       <button class="nav-item active" data-view="library"><svg class="ic"><use href="#i-grid"/></svg><span>动作库</span></button>
       <button class="nav-item" data-view="planner"><svg class="ic"><use href="#i-calendar"/></svg><span>周计划</span></button>
       <button class="nav-item" data-view="musclemap"><svg class="ic"><use href="#i-target"/></svg><span>肌肉地图</span></button>
-      <button class="nav-item" data-view="favorites"><svg class="ic"><use href="#i-heart"/></svg><span>收藏</span><i class="nav-count" id="favCount">0</i></button>
-      <button class="nav-item" data-view="log"><svg class="ic"><use href="#i-clipboard"/></svg><span>记录</span></button>
-      <button class="nav-item" data-view="stats"><svg class="ic"><use href="#i-chart"/></svg><span>概览</span></button>
       <button class="nav-item" data-view="tools"><svg class="ic"><use href="#i-sliders"/></svg><span>工具箱</span></button>
     </nav>
 
     <div class="top-right">
       <button class="icon-btn" id="todayCardBtn" title="今日训练卡" aria-label="查看今日训练卡" onclick="openExport('today')"><svg class="ic"><use href="#i-image"/></svg></button>
       <button class="icon-btn" id="themeBtn" title="切换深浅主题" aria-label="切换深浅主题"><svg class="ic"><use href="#i-moon"/></svg></button>
-      <button class="btn btn-solid" id="logTopBtn" title="补录一次已完成的训练" onclick="showLogModal()"><svg class="ic"><use href="#i-plus"/></svg><span>补录</span></button>
     </div>
   </div>
 </header>
@@ -1584,7 +1608,7 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
 
     <div class="welcome-bar" id="welcomeBar" hidden>
       <span class="wb-ic"><svg class="ic"><use href="#i-info"/></svg></span>
-      <div class="wb-txt"><b>第一次用？三步开练</b><span>在周计划挑一套模板 → 点顶栏「开始训练」跟着做 → 需要时导出训练卡</span></div>
+      <div class="wb-txt"><b>第一次用？三步做一张训练卡</b><span>动作库挑动作 → 排进周计划 → 导出成图片，随时翻出来看</span></div>
       <div class="wb-acts">
         <button class="btn btn-solid btn-sm" onclick="dismissWelcome();switchView('planner')">去排计划</button>
         <button class="btn btn-ghost btn-sm" onclick="dismissWelcome()">知道了</button>
@@ -1648,12 +1672,17 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
     <div class="page-head">
       <div>
         <h1>周计划</h1>
-        <p class="page-sub">点动作改组次，点「+」加动作</p>
+        <p class="page-sub">排好一周，导出成训练卡图片作参考</p>
       </div>
       <div class="head-actions">
         <button class="btn btn-ghost" onclick="clearPlan()"><svg class="ic"><use href="#i-trash"/></svg>清空</button>
         <button class="btn btn-solid" onclick="openExport('all')"><svg class="ic"><use href="#i-image"/></svg>导出训练卡</button>
       </div>
+    </div>
+
+    <div class="local-note">
+      <svg class="ic"><use href="#i-info"/></svg>
+      <span>这只是<b>做训练卡的编辑器</b>：本站没有账号，服务器不存任何数据。周计划仅保存在当前这台设备的浏览器里，换设备或清缓存会消失；导出的图片是普通文件，可以随便发、随便存。想在别处接着改，去工具箱导出一份计划文件。</span>
     </div>
 
     <div id="todayStrip"></div>
@@ -1686,47 +1715,12 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
     </div>
   </section>
 
-  <!-- ═══ FAVORITES ═══ -->
-  <section class="view" id="view-favorites">
-    <div class="page-head">
-      <div>
-        <h1>收藏</h1>
-        <p class="page-sub">把常练的动作放这儿</p>
-      </div>
-    </div>
-    <div class="grid" id="favGrid"></div>
-  </section>
-
-  <!-- ═══ LOG ═══ -->
-  <section class="view" id="view-log">
-    <div class="page-head">
-      <div>
-        <h1>训练记录</h1>
-        <p class="page-sub">每次完成的组数、次数与重量</p>
-      </div>
-    </div>
-    <div id="logList" class="log-list"></div>
-  </section>
-
-  <!-- ═══ STATS ═══ -->
-  <section class="view" id="view-stats">
-    <div class="page-head">
-      <div>
-        <h1>概览</h1>
-        <p class="page-sub">练了多少、还差哪儿</p>
-      </div>
-    </div>
-    <div class="stat-row" id="statsRow"></div>
-    <div id="statsDetail"></div>
-    <div id="statsExtra"></div>
-  </section>
-
   <!-- ═══ TOOLS ═══ -->
   <section class="view" id="view-tools">
     <div class="page-head">
       <div>
         <h1>工具箱</h1>
-        <p class="page-sub">常用计算与本地备份</p>
+        <p class="page-sub">常用计算 · 计划存取 · 数据说明</p>
       </div>
     </div>
     <div id="toolsBody"></div>
@@ -1756,24 +1750,6 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
         <input type="text" id="pickerSearch" placeholder="搜索动作…" oninput="filterPicker()" aria-label="搜索要添加的动作">
       </div>
       <div class="picker-list" id="pickerList"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ LOG MODAL ═══ -->
-<div class="overlay" id="logModal">
-  <div class="modal">
-    <div class="modal-head">
-      <h3>补录训练 <span class="modal-date" id="logDate"></span></h3>
-      <button class="modal-x" onclick="closeModal('logModal')" aria-label="关闭"><svg class="ic"><use href="#i-x"/></svg></button>
-    </div>
-    <div class="modal-body">
-      <p class="hint">填今天实际练了什么，跟练模式会自动帮你记</p>
-      <div id="logExList"></div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-solid" onclick="saveLog()"><svg class="ic"><use href="#i-check"/></svg>保存记录</button>
-      <button class="btn btn-ghost" onclick="closeModal('logModal')">取消</button>
     </div>
   </div>
 </div>
@@ -1871,10 +1847,9 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
     </div>
     <div class="modal-body">
       <div class="shortcut-list">
-        <div><kbd>1</kbd>–<kbd>7</kbd><span>依次切换：动作库 · 周计划 · 肌肉地图 · 收藏 · 记录 · 概览 · 工具箱</span></div>
+        <div><kbd>1</kbd>–<kbd>4</kbd><span>依次切换：动作库 · 周计划 · 肌肉地图 · 工具箱</span></div>
         <div><kbd>/</kbd><span>聚焦搜索框</span></div>
-        <div><kbd>S</kbd><span>开始今天的训练</span></div>
-        <div><kbd>N</kbd><span>补录一次训练</span></div>
+        <div><kbd>S</kbd><span>按今天计划看动作</span></div>
         <div><kbd>T</kbd><span>切换深浅主题</span></div>
         <div><kbd>Esc</kbd><span>关闭当前弹窗</span></div>
         <div><kbd>?</kbd><span>打开这个帮助</span></div>
@@ -2365,8 +2340,8 @@ const POPULARITY = {"1000":{"s":40,"k":0,"r":[],"a":0},"1001":{"s":44,"k":0,"r":
                SisuLift（自重动作）/ Age UK（民意调查）
              实证动作 ≥56 分并标注命中来源；榜单未覆盖的动作按
              同器械同肌群邻居推断，≤55 分并标注为推断值。
-   · 完全静态：不联网、不实时更新、不随时间变化、不读收藏 / 计划 /
-     训练记录 / 浏览记录，任何人在任何设备看到的分数完全一致。
+   · 完全静态：不联网、不实时更新、不随时间变化、不读取任何本机数据，
+     任何人在任何设备看到的分数完全一致。
      它是跨源热度指数，不是本站点击量，也不是任何单一平台的占比。
    ═══════════════════════════════════════════════════════════ */
 
@@ -2878,8 +2853,6 @@ let state = {
   selectedMuscle: null,
   bodyView: 'front',
   weeklyPlan: {},
-  favorites: [],
-  trainingLog: [],
   pickerTargetDay: null,
   displayLimit: 48,
   muscleFilter: 'all',
@@ -2919,8 +2892,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme();
 
   try { state.weeklyPlan = _get('ff_plan', null) || {}; } catch(e) {}
-  try { state.favorites = _get('ff_favs', []); } catch(e) { state.favorites = []; }
-  try { state.trainingLog = _get('ff_log', []); } catch(e) { state.trainingLog = []; }
   DAYS.forEach(d => { if (!state.weeklyPlan[d]) state.weeklyPlan[d] = { name:'', exercises:[] }; });
 
   // 首次打开：默认载入「新手入门」模板，避免周计划一片空白
@@ -2948,8 +2919,6 @@ document.addEventListener('DOMContentLoaded', () => {
   try { renderWeek(); } catch(e) {}
   try { renderBodyMap(); } catch(e) {}
   try { renderMuscleLegend(); } catch(e) {}
-  try { renderStats(); } catch(e) {}
-  try { updateFavCount(); } catch(e) {}
   try { initTimer(); } catch(e) {}
 
   // 顶栏导航：事件委托，任何带 data-view 的元素都能触发切换
@@ -2976,10 +2945,7 @@ function switchView(v, fromPop) {
   document.querySelectorAll('.view').forEach(s => s.classList.remove('active'));
   const el = document.getElementById(`view-${v}`);
   if (el) el.classList.add('active');
-  if (v === 'stats') renderStats();
   if (v === 'planner') renderWeek();
-  if (v === 'log') renderLogView();
-  if (v === 'favorites') renderFavorites();
   if (!fromPop) {
     try {
       const h = '#' + v;
@@ -3101,20 +3067,18 @@ function getFiltered() {
 }
 
 /* ═══ GRID ═══ */
-function cardHTML(ex, showFav = true) {
+function cardHTML(ex) {
   /* 有氧动作在原始数据里被标成「腹肌」，展示上改为「有氧全身」更贴合实际 */
   const mg = ex.category === 'cardio'
     ? { name: '有氧全身', color: '#4C9A86' }
     : MUSCLE_GROUPS[ex.primary[0]];
   const diffCls = { beginner:'beg', intermediate:'int', advanced:'adv' }[ex.difficulty] || 'beg';
   const diffName = DIFFICULTY[ex.difficulty]?.name || '';
-  const isFav = state.favorites.includes(ex.id);
   const eq = EQUIPMENT[ex.equipment]?.name || ex.equipment;
 
   return `<article class="card" onclick="showDetail('${ex.id}')">
     <div class="card-media">
       <img src="${ex.gifUrl}" alt="${ex.name}" loading="lazy">
-      ${showFav ? `<button class="fav ${isFav?'on':''}" onclick="event.stopPropagation();toggleFav('${ex.id}')" title="收藏">${ic(isFav?'heart-fill':'heart')}</button>` : ''}
       ${heatPillHTML(ex)}
     </div>
     <div class="card-body">
@@ -3167,34 +3131,6 @@ function showAllResults() {
   state.displayLimit = getFiltered().length;
   renderGrid();
   toast('已显示全部动作，往下翻就行');
-}
-
-/* ─── Favorites ─── */
-function toggleFav(id) {
-  const idx = state.favorites.indexOf(id);
-  if (idx >= 0) { state.favorites.splice(idx, 1); toast('已取消收藏'); }
-  else { state.favorites.push(id); toast('已加入收藏'); }
-  _set('ff_favs', state.favorites);
-  updateFavCount();
-  renderGrid();
-  if (state.view === 'favorites') renderFavorites();
-}
-function updateFavCount() {
-  const el = document.getElementById('favCount');
-  if (!el) return;
-  el.textContent = state.favorites.length;
-  el.dataset.zero = state.favorites.length ? '0' : '1';
-}
-function renderFavorites() {
-  const grid = document.getElementById('favGrid');
-  if (!grid) return;
-  const favs = EXERCISES.filter(e => state.favorites.includes(e.id));
-  if (favs.length === 0) {
-    grid.innerHTML = emptyHTML('heart', '这里还空着', '把常练的动作收进来，下次一点就到',
-      `<button class="btn btn-solid btn-sm" onclick="switchView('library')">${ic('grid')}去挑动作</button>`);
-    return;
-  }
-  grid.innerHTML = favs.map(ex => cardHTML(ex)).join('');
 }
 
 /* ═══ DETAIL ═══ */
@@ -3556,82 +3492,6 @@ function updateTimerDisplay() {
   if (btn) btn.innerHTML = timerState.running ? ic('pause') : ic('play');
 }
 
-/* ═══ TRAINING LOG ═══ */
-function showLogModal() {
-  const today = new Date().toLocaleDateString('zh-CN');
-  const dayKey = DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
-  const plan = state.weeklyPlan[dayKey]?.exercises || [];
-
-  if (plan.length === 0) {
-    toast('今天没有安排训练动作', 'err');
-    return;
-  }
-
-  document.getElementById('logDate').textContent = today;
-  document.getElementById('logExList').innerHTML = plan.map((item, i) => {
-    const ex = EXERCISES.find(e => e.id === item.id);
-    if (!ex) return '';
-    return `<div class="log-ex">
-      <div class="ln">${ex.name}</div>
-      <div class="log-input">
-        <input type="number" value="${parseInt(item.sets)||3}" id="logSets${i}" min="1" title="组数">×
-        <input type="number" value="${parseInt(item.reps)||10}" id="logReps${i}" min="1" title="次数">
-        <input type="number" class="w" placeholder="kg" id="logWeight${i}" min="0" step="0.5" title="重量">
-      </div>
-    </div>`;
-  }).join('');
-
-  openModal('logModal');
-}
-
-function saveLog() {
-  const today = new Date().toLocaleDateString('zh-CN');
-  const dayKey = DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
-  const plan = state.weeklyPlan[dayKey]?.exercises || [];
-
-  const entry = {
-    date: today,
-    timestamp: Date.now(),
-    exercises: plan.map((item, i) => {
-      const ex = EXERCISES.find(e => e.id === item.id);
-      return {
-        id: item.id,
-        name: ex?.name || '',
-        sets: parseInt(document.getElementById(`logSets${i}`)?.value) || 3,
-        reps: parseInt(document.getElementById(`logReps${i}`)?.value) || 10,
-        weight: parseFloat(document.getElementById(`logWeight${i}`)?.value) || 0,
-      };
-    }).filter(e => e.name)
-  };
-
-  state.trainingLog.unshift(entry);
-  if (state.trainingLog.length > 100) state.trainingLog = state.trainingLog.slice(0, 100);
-  _set('ff_log', state.trainingLog);
-  closeModal('logModal');
-  toast('训练记录已保存');
-  if (state.view === 'log') renderLogView();
-}
-
-function renderLogView() {
-  const container = document.getElementById('logList');
-  if (!container) return;
-  if (state.trainingLog.length === 0) {
-    container.innerHTML = emptyHTML('clipboard', '还没有训练记录', '跟着计划练一次，数据会自动存进来',
-      `<button class="btn btn-solid btn-sm" onclick="startSession()">${ic('play')}开始今天的训练</button>
-       <button class="btn btn-ghost btn-sm" onclick="showLogModal()">${ic('plus')}补录一次</button>`);
-    return;
-  }
-  container.innerHTML = state.trainingLog.map(entry => `
-    <div class="log-card">
-      <div class="log-date">${entry.date}</div>
-      ${entry.exercises.map(ex => `
-        <div class="log-ex">
-          <div class="ln">${ex.name}</div>
-          <div class="ls">${ex.sets}×${ex.reps}${ex.weight ? ' @'+ex.weight+'kg' : ''}</div>
-        </div>`).join('')}
-    </div>`).join('');
-}
-
 /* ═══ MUSCLE MAP ═══ */
 function showBodyView(v) {
   state.bodyView = v;
@@ -3722,63 +3582,6 @@ function selectMuscle(key) {
         </div>`;
       }).join('')}
       ${exercises.length > 24 ? `<div style="text-align:center;padding:8px;font-size:11.5px;color:var(--t4)">还有 ${exercises.length - 24} 个动作</div>` : ''}
-    </div>`;
-}
-
-/* ═══ STATS ═══ */
-function renderStats() {
-  const grid = document.getElementById('statsRow');
-  const detail = document.getElementById('statsDetail');
-  if (!grid) return;
-
-  let totalEx = 0, totalSets = 0;
-  const muscles = new Set(), equips = new Set();
-  DAYS.forEach(d => {
-    (state.weeklyPlan[d]?.exercises || []).forEach(item => {
-      totalEx++;
-      totalSets += parseInt(item.sets) || 3;
-      const ex = EXERCISES.find(e => e.id === item.id);
-      if (ex) {
-        ex.primary.forEach(m => muscles.add(m));
-        ex.secondary.forEach(m => muscles.add(m));
-        equips.add(ex.equipment);
-      }
-    });
-  });
-  const trainDays = DAYS.filter(d => (state.weeklyPlan[d]?.exercises || []).length > 0).length;
-  const totalMuscles = Object.keys(MUSCLE_GROUPS).length;
-
-  grid.innerHTML = `
-    <div class="stat"><div class="stat-v">${totalEx}</div><div class="stat-l">计划动作数</div><div class="stat-tag ok">${trainDays} 个训练日</div></div>
-    <div class="stat"><div class="stat-v">${totalSets}</div><div class="stat-l">总训练组数</div><div class="stat-tag ok">本周安排</div></div>
-    <div class="stat"><div class="stat-v">${muscles.size}<small>/${totalMuscles}</small></div><div class="stat-l">覆盖肌群</div><div class="stat-tag ${muscles.size===totalMuscles?'ok':'no'}">${muscles.size===totalMuscles?'全部练到':(totalMuscles-muscles.size)+' 个待补'}</div></div>
-    <div class="stat"><div class="stat-v">${state.trainingLog.length}</div><div class="stat-l">训练记录</div><div class="stat-tag ok">累计</div></div>
-  `;
-
-  const coverage = Object.entries(MUSCLE_GROUPS).map(([key, mg]) => {
-    let sets = 0;
-    DAYS.forEach(d => {
-      (state.weeklyPlan[d]?.exercises || []).forEach(item => {
-        const ex = EXERCISES.find(e => e.id === item.id);
-        if (ex && (ex.primary.includes(key) || ex.secondary.includes(key))) sets += parseInt(item.sets)||3;
-      });
-    });
-    return { key, ...mg, sets };
-  }).sort((a,b) => b.sets - a.sets);
-
-  const active = coverage.filter(m => m.sets > 0);
-  const idle = coverage.length - active.length;
-  detail.innerHTML = `
-    <div class="chart-card">
-      <h3>各肌群训练量分布 <span class="chart-sub">本周计划</span></h3>
-      ${active.length ? active.map(m => `
-        <div class="brow">
-          <div class="blabel"><span class="bdot" style="background:${m.color}"></span>${m.name}</div>
-          <div class="btrack"><div class="bfill" style="width:${Math.min((m.sets/20)*100,100)}%;background:${m.color}"></div></div>
-          <div class="bval">${m.sets} 组</div>
-        </div>`).join('')
-        : '<p class="tool-note">还没安排训练动作，先去周计划挑一套模板。</p>'}
-      ${idle ? `<p class="chart-foot">另有 ${idle} 个肌群本周未安排</p>` : ''}
     </div>`;
 }
 
@@ -4515,10 +4318,9 @@ function closeMoveLightbox() {
 </script>
 <script>
 /* ═══════════════════════════════════════════════════════════
- * 引导式跟练（借鉴 openGym / Strong / Hevy）
- * 从周计划或今日训练卡一键进入：大 GIF 循环 → 分步要领 → 逐组打勾
- * → 自动休息计时 → PR 检测 → 下次重量建议 → 写入训练记录
- * 全程本地，状态可中断续练
+ * 跟练演示：从周计划或今日训练卡进入，大 GIF 循环 → 分步要领 → 逐组打勾 → 休息计时
+ * 只是按计划看动作的引导器：不记录成绩、不写训练日志、不保存个人数据
+ * 仅临时存一下「看到第几个动作」，方便中断续看
  * ═══════════════════════════════════════════════════════════ */
 
 const SESSION = {
@@ -4528,34 +4330,6 @@ const SESSION = {
 
 function ssGet(k, d) { try { return _get(k, d); } catch (e) { return d; } }
 function ssSet(k, v) { try { _set(k, v); } catch (e) {} }
-
-function e1rm(weight, reps) {
-  const w = parseFloat(weight) || 0, r = parseInt(reps) || 0;
-  if (!w || !r) return 0;
-  return Math.round(w * (1 + r / 30) * 10) / 10;   // Epley
-}
-
-function getPRs() { return ssGet('ff_pr', {}) || {}; }
-function savePRs(p) { ssSet('ff_pr', p); }
-
-/* 从历史记录里找某动作上次成绩 / 历史最佳 */
-function lastLift(id) {
-  const logs = state.trainingLog || [];
-  for (const entry of logs) {
-    const hit = (entry.exercises || []).find(x => x.id === id);
-    if (hit) return hit;
-  }
-  return null;
-}
-function bestLift(id) {
-  let best = null;
-  (state.trainingLog || []).forEach(entry => (entry.exercises || []).forEach(x => {
-    if (x.id !== id) return;
-    const score = parseFloat(x.weight) || 0;
-    if (!best || score > best.weight) best = { weight: score, reps: parseInt(x.reps) || 0, date: entry.date };
-  }));
-  return best;
-}
 
 function beep(freq, ms) {
   try {
@@ -4610,10 +4384,9 @@ function startSession(dayKey, resume) {
     SESSION.items = plan.map(it => {
       const ex = EXERCISES.find(e => e.id === it.id);
       if (!ex) return null;
-      const last = lastLift(it.id);
       const n = Math.max(1, Math.min(8, parseInt(it.sets) || 3));
       const reps = String(it.reps || ex.repRange || '10').replace(/[^0-9].*$/, '') || '10';
-      const weight = (it.weight !== '' && it.weight != null) ? it.weight : (last && last.weight ? last.weight : '');
+      const weight = (it.weight !== '' && it.weight != null) ? it.weight : '';
       return {
         id: it.id, name: ex.name, gif: ex.gifUrl, rest: ex.restSec || 60,
         target: (EXERCISE_EXTRA[it.id] || {}).t || '',
@@ -4692,7 +4465,6 @@ function renderSession() {
   const doneCount = SESSION.items.reduce((n, x) => n + x.sets.filter(s => s.done).length, 0);
   const allSets = SESSION.items.reduce((n, x) => n + x.sets.length, 0);
   const pct = allSets ? Math.round(doneCount / allSets * 100) : 0;
-  const last = lastLift(it.id), best = bestLift(it.id);
 
   if (head) head.innerHTML = `
     <div class="ss-title"><b>${DAY_NAMES[SESSION.day] ? DAY_NAMES[SESSION.day] + ' · ' : ''}${state.weeklyPlan[SESSION.day]?.name || '训练'}</b>
@@ -4710,10 +4482,6 @@ function renderSession() {
       <div class="ss-meta">${it.sets.length} 组 × ${it.sets[0].reps} 次 · ${it.equip}${it.target ? ' · ' + it.target : ''} · 组间 ${it.rest}s</div>
       ${it.steps.length ? `<details class="ss-steps" open><summary>怎么做 · ${it.steps.length} 步 ${ic('arrow-right')}</summary>
         <ol>${it.steps.map(s => `<li>${s}</li>`).join('')}</ol></details>` : ''}
-      <div class="ss-history">
-        ${last ? `<span>上次 <b>${last.sets}×${last.reps}${last.weight ? ' @ ' + last.weight + 'kg' : ''}</b></span>` : '<span>首次记录这个动作</span>'}
-        ${best && best.weight ? `<span>历史最佳 <b>${best.weight}kg</b>${best.reps ? ` · e1RM ${e1rm(best.weight, best.reps)}kg` : ''}</span>` : ''}
-      </div>
     </div>
     <div class="ss-sets">
       <div class="ss-sets-head"><span>组</span><span>次数</span><span>重量 kg</span><span>努力度</span><span>完成</span></div>
@@ -4802,84 +4570,49 @@ function nextSessionExercise() {
   }
 }
 
-/* ─── 结束 & 汇总 ─── */
+/* ─── 结束 & 本次汇总（不写入任何存储） ─── */
 function finishSession() {
-  const prs = getPRs();
-  const prList = [], advice = [];
   let volume = 0, doneSets = 0;
-  const exercises = SESSION.items.map(it => {
+  SESSION.items.forEach(it => {
     const done = it.sets.filter(s => s.done);
-    const reps = done.length ? Math.round(done.reduce((n, s) => n + (parseInt(s.reps) || 0), 0) / done.length) : 0;
-    const weight = done.length ? Math.max(...done.map(s => parseFloat(s.weight) || 0)) : 0;
-    const rpe = done.length ? Math.max(...done.map(s => parseInt(s.rpe) || 0)) : 0;
     doneSets += done.length;
     volume += done.reduce((n, s) => n + (parseInt(s.reps) || 0) * (parseFloat(s.weight) || 0), 0);
-
-    const best = bestLift(it.id);
-    const isPR = weight > 0 && (!best || weight > best.weight);
-    if (isPR) {
-      prs[it.id] = { weight, reps, e1rm: e1rm(weight, reps), date: new Date().toLocaleDateString('zh-CN') };
-      prList.push({ name: it.name, weight, reps });
-    }
-    // 线性进阶建议：全部组完成且留有余力
-    if (done.length === it.sets.length && done.length > 0 && (rpe === 0 || rpe <= 8)) {
-      if (weight > 0) advice.push({ name: it.name, text: '下次加 ' + (weight >= 40 ? 2.5 : 1.25) + 'kg → ' + (weight + (weight >= 40 ? 2.5 : 1.25)) + 'kg' });
-      else advice.push({ name: it.name, text: '下次加 2 次 → ' + (reps + 2) + ' 次/组' });
-    }
-    return { id: it.id, name: it.name, sets: done.length || it.sets.length, reps, weight, rpe: rpe || '' };
   });
 
   const mins = Math.max(1, Math.round((Date.now() - SESSION.started) / 60000));
-  const entry = {
-    date: new Date().toLocaleDateString('zh-CN'),
-    timestamp: Date.now(), duration: mins, volume: Math.round(volume),
-    exercises
-  };
-  state.trainingLog.unshift(entry);
-  if (state.trainingLog.length > 200) state.trainingLog = state.trainingLog.slice(0, 200);
-  ssSet('ff_log', state.trainingLog);
-  savePRs(prs);
   ssSet('ff_session', { done: true, at: Date.now() });
 
   SESSION.finished = true; SESSION.on = false;
   clearInterval(SESSION.restTimer); releaseWake();
   beep(1046, 200); setTimeout(() => beep(1318, 300), 180);
 
-  document.getElementById('sessionHead').innerHTML = '<div class="ss-title"><b>训练完成</b><span>干得漂亮</span></div>';
+  document.getElementById('sessionHead').innerHTML = '<div class="ss-title"><b>跟练结束</b><span>本次结果不保存</span></div>';
   document.getElementById('sessionBody').innerHTML = `
     <div class="ss-done">
       <div class="ss-done-icon">${ic('check')}</div>
-      <h2>今天练完了</h2>
+      <h2>这一轮看完了</h2>
       <div class="ss-sum">
-        <div><b>${exercises.length}</b><span>动作</span></div>
+        <div><b>${SESSION.items.length}</b><span>动作</span></div>
         <div><b>${doneSets}</b><span>完成组数</span></div>
         <div><b>${mins}</b><span>分钟</span></div>
         <div><b>${Math.round(volume)}</b><span>总容量 kg</span></div>
       </div>
-      ${prList.length ? `<div class="ss-pr"><h4>${ic('zap')} 新纪录</h4>${prList.map(p =>
-        `<div><b>${p.name}</b> ${p.weight}kg × ${p.reps} 次 · e1RM ${e1rm(p.weight, p.reps)}kg</div>`).join('')}</div>` : ''}
-      ${advice.length ? `<div class="ss-advice"><h4>${ic('rotate')} 下次进阶建议</h4>${advice.slice(0, 6).map(a =>
-        `<div><b>${a.name}</b> ${a.text}</div>`).join('')}</div>` : ''}
-      <p class="ss-note">记录已保存到「训练记录」与「概览」</p>
+      <p class="ss-note">本站不记录训练数据，以上只在本次显示，关掉就没了。想留档请导出训练卡图片。</p>
     </div>`;
   document.getElementById('sessionFoot').innerHTML = `
-    <button class="btn btn-ghost" onclick="closeSession();switchView('log')">查看记录</button>
     <button class="btn btn-solid" onclick="closeSession()">完成</button>`;
-  try { renderLogView(); renderStats(); } catch (e) {}
 }
 
 </script>
 <script>
 /* ═══════════════════════════════════════════════════════════
- * 增强模块：工具箱 / 统计可视化 / 本地备份 / 交互打磨
- * 借鉴 openGym（1RM、杠铃片、热力图、PR、肌群覆盖）
- *      workout.cool（多条件筛选、随机挑动作）
- *      Strong / Hevy（引导式记录、进阶建议）
- * 全部本地计算，无任何网络请求
+ * 增强模块：工具箱 / 周计划存取 / 交互打磨
+ * 借鉴 openGym（1RM、杠铃片）、workout.cool（多条件筛选、随机挑动作）
+ * 全部本地计算，无任何网络请求；不保存任何训练记录或个人成绩
  * ═══════════════════════════════════════════════════════════ */
 
-const TOOL_VIEWS = ['library', 'planner', 'musclemap', 'favorites', 'log', 'stats', 'tools'];
-const TOOL_LABEL = { library: '动作库', planner: '周计划', musclemap: '肌肉地图', favorites: '收藏', log: '记录', stats: '概览', tools: '工具箱' };
+const TOOL_VIEWS = ['library', 'planner', 'musclemap', 'tools'];
+const TOOL_LABEL = { library: '动作库', planner: '周计划', musclemap: '肌肉地图', tools: '工具箱' };
 
 /* ═════════ 工具箱 ═════════ */
 function renderTools() {
@@ -4938,23 +4671,33 @@ function renderTools() {
     </section>
 
     <section class="tool-card">
-      <div class="tool-h"><span class="tool-ic">${ic('download')}</span><div><h3>本地数据备份</h3><p>计划、记录、收藏、PR 全部导出成一个文件</p></div></div>
+      <div class="tool-h"><span class="tool-ic">${ic('download')}</span><div><h3>周计划存成文件</h3><p>换设备继续编辑，或者留个底</p></div></div>
       <div class="backup-row">
-        <button class="btn btn-solid" onclick="backupData()">${ic('download')}导出备份</button>
-        <label class="btn btn-soft">${ic('rotate')}导入还原<input type="file" accept="application/json,.json" style="display:none" onchange="restoreData(this)"></label>
+        <button class="btn btn-solid" onclick="backupData()">${ic('download')}导出周计划</button>
+        <label class="btn btn-soft">${ic('rotate')}从文件读回<input type="file" accept="application/json,.json" style="display:none" onchange="restoreData(this)"></label>
+        <button class="btn btn-ghost" onclick="clearLocalData()">${ic('trash')}清空本机数据</button>
       </div>
-      <p class="tool-note">文件只在本机生成，不上传任何服务器。换电脑或重装浏览器前记得导一份。</p>
+      <p class="tool-note">文件只在本机生成，不上传任何服务器。旧版备份里的周计划也能读回来。</p>
       <div id="backupInfo"></div>
     </section>
 
-    <section class="tool-card">
+    <section class="tool-card wide">
+      <div class="tool-h"><span class="tool-ic">${ic('info')}</span><div><h3>数据存在哪</h3><p>没有账号，也不上传</p></div></div>
+      <div class="data-note">
+        <p>本站是纯静态页面：没有账号系统、没有数据库、没有后端接口。运行时除了下载同源的动作 GIF 和动画分块，不发任何请求。</p>
+        <p><b>周计划只保存在这台设备的这个浏览器里</b>，另外还有跟练的临时进度和主题偏好。换浏览器、换设备、无痕窗口、清缓存都会丢；别人打开这个网址，看到的是一份全新的默认计划。</p>
+        <p>导出的训练卡图片是普通文件，不受这些限制，可以随便发、随便存。想把计划搬到别处，用上面的「导出周计划」。</p>
+      </div>
+    </section>
+
+    <section class="tool-card full">
       <div class="tool-h"><span class="tool-ic">${ic('chart')}</span><div><h3>热门度是怎么来的</h3><p>联网调研一次，固化成死数据；网站运行时完全离线</p></div></div>
       ${popularitySourcesHTML()}
     </section>
   </div>`;
   ['calc1RM', 'calcPlates', 'calcBody', 'calcHR', 'calcVol'].forEach(f => { try { window[f](); } catch (e) {} });
   const bi = document.getElementById('backupInfo');
-  if (bi) bi.innerHTML = `<p class="tool-note">当前数据：${state.trainingLog.length} 次训练 · ${state.favorites.length} 个收藏 · ${Object.keys(getPRs()).length} 个个人纪录</p>`;
+  if (bi) bi.innerHTML = `<p class="tool-note">当前周计划：${DAYS.filter(d => (state.weeklyPlan[d]?.exercises || []).length).length} 个训练日 · ${DAYS.reduce((n, d) => n + (state.weeklyPlan[d]?.exercises || []).length, 0)} 个动作</p>`;
 }
 
 function num(id, d) { const v = parseFloat(document.getElementById(id)?.value); return isFinite(v) ? v : d; }
@@ -5035,20 +4778,19 @@ function calcVol() {
     <p class="tool-mini">${s} 组 × ${r} 次 × ${w}kg　·　自重动作建议按「次数 × 组数」单独衡量</p>`;
 }
 
-/* ═════════ 本地备份 ═════════ */
+/* ═════════ 周计划存成文件 / 读回 / 清空本机数据 ═════════ */
 function backupData() {
   const data = {
-    app: 'FitForge', version: 2, exported: new Date().toISOString(),
-    plan: state.weeklyPlan, favorites: state.favorites, log: state.trainingLog,
-    pr: getPRs(), theme: document.documentElement.dataset.theme
+    app: 'FitForge', version: 3, exported: new Date().toISOString(),
+    plan: state.weeklyPlan, theme: document.documentElement.dataset.theme
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = 'FitForge_备份_' + new Date().toISOString().slice(0, 10) + '.json';
+  a.href = url; a.download = 'FitForge_周计划_' + new Date().toISOString().slice(0, 10) + '.json';
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 3000);
-  toast('备份文件已保存到下载目录');
+  toast('周计划已保存到下载目录');
 }
 function restoreData(input) {
   const f = input.files && input.files[0];
@@ -5057,25 +4799,18 @@ function restoreData(input) {
   fr.onload = () => {
     try {
       const d = JSON.parse(fr.result);
-      if (d.app !== 'FitForge') throw new Error('不是 FitForge 备份文件');
-      if (!confirm('导入会替换当前的周计划、记录、收藏和 PR。\n建议先导出一份当前备份，确定继续吗？')) return;
-      const before = {
-        plan: JSON.parse(JSON.stringify(state.weeklyPlan)),
-        favs: state.favorites.slice(), log: state.trainingLog.slice(),
-        pr: JSON.parse(JSON.stringify(getPRs()))
-      };
-      const refresh = () => { try { renderWeek(); renderGrid(); renderFavorites(); renderLogView(); renderStats(); updateFavCount(); renderTools(); } catch (e) {} };
-      if (d.plan) { state.weeklyPlan = d.plan; ssSet('ff_plan', d.plan); }
-      if (Array.isArray(d.favorites)) { state.favorites = d.favorites; ssSet('ff_favs', d.favorites); }
-      if (Array.isArray(d.log)) { state.trainingLog = d.log; ssSet('ff_log', d.log); }
-      if (d.pr) savePRs(d.pr);
-      refresh();
-      toast('数据已还原：' + (d.log || []).length + ' 次训练', 'ok', {
+      if (d.app !== 'FitForge' || !d.plan) throw new Error('不是 FitForge 周计划文件');
+      if (!confirm('导入会替换当前的周计划。\n建议先导出一份留底，确定继续吗？')) return;
+      const before = JSON.parse(JSON.stringify(state.weeklyPlan));
+      state.weeklyPlan = d.plan;
+      DAYS.forEach(day => { if (!state.weeklyPlan[day]) state.weeklyPlan[day] = { name: '', exercises: [] }; });
+      ssSet('ff_plan', state.weeklyPlan);
+      renderWeek(); renderGrid(); renderTools();
+      toast('周计划已读回', 'ok', {
         label: '撤销',
         fn: () => {
-          state.weeklyPlan = before.plan; state.favorites = before.favs; state.trainingLog = before.log;
-          ssSet('ff_plan', before.plan); ssSet('ff_favs', before.favs); ssSet('ff_log', before.log);
-          savePRs(before.pr); refresh(); toast('已恢复导入前的数据');
+          state.weeklyPlan = before; ssSet('ff_plan', before);
+          renderWeek(); renderTools(); toast('已恢复导入前的计划');
         }
       });
     } catch (e) { toast('导入失败：' + e.message, 'err'); }
@@ -5083,115 +4818,14 @@ function restoreData(input) {
   };
   fr.readAsText(f);
 }
-
-/* ═════════ 统计增强 ═════════ */
-function renderStatsExtra() {
-  const box = document.getElementById('statsExtra');
-  if (!box) return;
-  const logs = state.trainingLog || [];
-  const byDate = {};
-  logs.forEach(e => {
-    const d = e.timestamp ? new Date(e.timestamp) : new Date(e.date);
-    const k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    if (!byDate[k]) byDate[k] = { sets: 0, vol: 0 };
-    (e.exercises || []).forEach(x => {
-      const s = parseInt(x.sets) || 0;
-      byDate[k].sets += s;
-      byDate[k].vol += (e.volume || 0) ? 0 : s * (parseInt(x.reps) || 0) * (parseFloat(x.weight) || 0);
-    });
-    if (e.volume) byDate[k].vol += e.volume;
+/* 顺手清掉旧版本可能留下的收藏 / 训练记录 / 个人纪录，不再保留任何历史个人数据 */
+function clearLocalData() {
+  if (!confirm('会清空这台设备上的周计划、跟练进度和主题偏好，并恢复默认计划。\n导出的训练卡图片不受影响。确定继续吗？')) return;
+  ['ff_plan', 'ff_session', 'ff_theme', 'ff_tplopen', 'ff_welcomed',
+   'ff_favs', 'ff_log', 'ff_pr'].forEach(k => {
+    try { localStorage.removeItem(k); } catch (e) {}
   });
-
-  // 年度热力图（最近 26 周，按周排列）
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const cells = [];
-  for (let i = 181; i >= 0; i--) {
-    const d = new Date(today.getTime() - i * 86400000);
-    const k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    const v = byDate[k];
-    const lv = !v ? 0 : v.sets >= 20 ? 4 : v.sets >= 14 ? 3 : v.sets >= 8 ? 2 : 1;
-    cells.push(`<i class="hm lv${lv}" title="${k} · ${v ? v.sets + ' 组 / ' + Math.round(v.vol) + 'kg' : '休息'}"></i>`);
-  }
-
-  // 近 8 周容量
-  const weeks = [];
-  for (let i = 7; i >= 0; i--) {
-    const end = new Date(today.getTime() - i * 7 * 86400000);
-    const start = new Date(end.getTime() - 7 * 86400000);
-    let vol = 0, sets = 0, n = 0;
-    logs.forEach(e => {
-      const t = e.timestamp ? new Date(e.timestamp) : new Date(e.date);
-      if (t >= start && t < end) { vol += e.volume || 0; n++; (e.exercises || []).forEach(x => sets += parseInt(x.sets) || 0); }
-    });
-    weeks.push({ label: (end.getMonth() + 1) + '/' + end.getDate(), vol, sets, n });
-  }
-  const maxVol = Math.max(1, ...weeks.map(w => w.vol));
-
-  // PR 榜（从记录算 e1RM / 最大重量）
-  const prs = getPRs(), best = {};
-  logs.forEach(e => (e.exercises || []).forEach(x => {
-    const w = parseFloat(x.weight) || 0, r = parseInt(x.reps) || 0;
-    if (!w) return;
-    const score = e1rm(w, r);
-    if (!best[x.id] || score > best[x.id].score) best[x.id] = { name: x.name || x.id, w, r, score, date: e.date };
-  }));
-  Object.entries(prs).forEach(([id, p]) => {
-    if (!best[id] || p.e1rm > best[id].score) best[id] = {
-      name: (EXERCISES.find(e => e.id === id) || {}).name || id,
-      w: p.weight, r: p.reps, score: p.e1rm || e1rm(p.weight, p.reps), date: p.date
-    };
-  });
-  const prList = Object.values(best).sort((a, b) => b.score - a.score).slice(0, 8);
-
-  // 本周未覆盖肌群
-  const covered = new Set();
-  DAYS.forEach(d => (state.weeklyPlan[d]?.exercises || []).forEach(it => {
-    const ex = EXERCISES.find(e => e.id === it.id);
-    if (ex) { ex.primary.forEach(m => covered.add(m)); ex.secondary.forEach(m => covered.add(m)); }
-  }));
-  const missing = Object.entries(MUSCLE_GROUPS).filter(([k]) => !covered.has(k)).map(([, v]) => v.name);
-  const totalVol = logs.reduce((s, e) => s + (e.volume || 0), 0);
-  const totalMin = logs.reduce((s, e) => s + (e.duration || 0), 0);
-
-  const volT = totalVol >= 1000;
-  const volText = totalVol ? (volT ? (totalVol / 1000).toFixed(1) : Math.round(totalVol)) : '—';
-  const volUnit = volT ? 't' : 'kg';
-
-  box.innerHTML = `
-    ${logs.length ? `
-    <div class="stat-mini-row">
-      <div><b>${logs.length}</b><span>累计训练</span></div>
-      <div><b>${totalMin}</b><span>训练分钟</span></div>
-      <div><b>${volText}${totalVol ? `<small>${volUnit}</small>` : ''}</b><span>累计容量</span></div>
-      <div><b>${prList.length}</b><span>有 PR 动作</span></div>
-    </div>
-    <div class="chart-card">
-      <h3>训练热力图 <span class="chart-sub">最近 26 周 · 颜色越深练得越多</span></h3>
-      <div class="heatmap">${cells.join('')}</div>
-      <div class="hm-legend">少 <i class="hm lv0"></i><i class="hm lv1"></i><i class="hm lv2"></i><i class="hm lv3"></i><i class="hm lv4"></i> 多</div>
-    </div>
-    <div class="chart-card">
-      <h3>近 8 周训练容量 <span class="chart-sub">${volUnit}</span></h3>
-      <div class="wchart">${weeks.map(w => `<div class="wcol" title="${w.label} · ${w.n} 次训练 / ${Math.round(w.vol)}kg">
-        <div class="wbar-wrap"><div class="wbar" style="height:${Math.max(w.vol ? 6 : 2, w.vol / maxVol * 100)}%"></div></div>
-        <span>${w.label}</span></div>`).join('')}</div>
-    </div>` : `
-    <div class="stats-empty">
-      <span class="se-ic">${ic('chart')}</span>
-      <div class="se-txt"><b>还没有训练数据</b><p>练完一次，这里会出现热力图、容量曲线和个人纪录。</p></div>
-      <button class="btn btn-solid btn-sm" onclick="startSession()">${ic('play')}开始训练</button>
-    </div>`}
-    <div class="two-col">
-      <div class="chart-card"><h3>个人纪录 PR</h3>
-        ${prList.length ? prList.map((p, i) => `<div class="pr-row"><b>${String(i + 1).padStart(2, '0')}</b><span>${p.name}</span><em>${p.w}kg × ${p.r}</em><i>e1RM ${p.score}kg</i></div>`).join('')
-          : '<p class="tool-note">跟练时填上重量，系统会自动记下每个动作的最佳成绩。</p>'}
-      </div>
-      <div class="chart-card"><h3>本周肌群覆盖</h3>
-        <p class="tool-note">已覆盖 ${covered.size} / ${Object.keys(MUSCLE_GROUPS).length} 个肌群</p>
-        ${missing.length ? `<div class="miss-tags">${missing.map(m => `<span>${m}</span>`).join('')}</div><p class="tool-note">这些肌群本周还没练到，可以补一两个动作。</p>`
-          : '<p class="tool-note ok">全部肌群都有练到，安排很均衡。</p>'}
-      </div>
-    </div>`;
+  location.reload();
 }
 
 /* ═════════ 筛选与搜索增强 ═════════ */
@@ -5425,15 +5059,13 @@ showDetail = function (id) {
     `<button class="btn btn-soft" onclick="closeModal('detailModal');startSingleSession('${id}')">${ic('play')}跟练这个动作</button>`);
 };
 
-/* ═════════ 视图切换 & 统计挂钩 ═════════ */
+/* ═════════ 视图切换 ═════════ */
 const _origSwitchView = switchView;
 switchView = function (v, fromPop) {
   _origSwitchView(v, fromPop);
   if (v === 'tools') renderTools();
   document.querySelectorAll('.bottom-nav .bn-item').forEach(b => b.classList.toggle('on', b.dataset.view === v));
 };
-const _origRenderStats = renderStats;
-renderStats = function () { _origRenderStats(); try { renderStatsExtra(); } catch (e) { console.warn(e); } };
 
 /* ═════════ 快捷键 / 底部导航 / 帮助 ═════════ */
 function openHelp() {
@@ -5442,10 +5074,9 @@ function openHelp() {
 }
 document.addEventListener('keydown', e => {
   if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
-  if (e.key >= '1' && e.key <= '7') { switchView(TOOL_VIEWS[+e.key - 1]); return; }
+  if (e.key >= '1' && e.key <= '4') { switchView(TOOL_VIEWS[+e.key - 1]); return; }
   if (e.key === 's' || e.key === 'S') { startSession(); return; }
   if (e.key === 't' || e.key === 'T') { toggleTheme(); return; }
-  if (e.key === 'n' || e.key === 'N') { showLogModal(); return; }
   if (e.key === '?') { e.preventDefault(); openHelp(); return; }
   // Esc 由 app.js 统一处理：只关最上层弹窗，避免一次按掉多层
 });
@@ -5513,7 +5144,7 @@ function dismissWelcome() {
 
 function buildBottomNav() {
   if (document.querySelector('.bottom-nav')) return;
-  const icons = { library: 'grid', planner: 'calendar', musclemap: 'target', favorites: 'heart', log: 'clipboard', stats: 'chart', tools: 'sliders' };
+  const icons = { library: 'grid', planner: 'calendar', musclemap: 'target', tools: 'sliders' };
   const nav = document.createElement('nav');
   nav.className = 'bottom-nav';
   nav.innerHTML = TOOL_VIEWS.map(v => `<button class="bn-item ${v === 'library' ? 'on' : ''}" data-view="${v}">${ic(icons[v])}<span>${TOOL_LABEL[v]}</span></button>`).join('');
@@ -5526,7 +5157,6 @@ document.addEventListener('DOMContentLoaded', () => {
   try { buildBottomNav(); } catch (e) {}
   try { renderTplRow(); } catch (e) {}
   try { updateTodayStrip(); } catch (e) {}
-  try { renderStatsExtra(); } catch (e) {}
   try { updateFilterBadge(); } catch (e) {}
   try {
     if (localStorage.getItem('ff_welcomed') !== '1') {
@@ -5543,7 +5173,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (topRight) {
     const resume = hasSavedSession();
     topRight.insertAdjacentHTML('afterbegin',
-      `<button class="btn btn-soft" id="startSessionBtn" onclick="startSession(null, ${resume})">${ic(resume ? 'rotate' : 'play')}<span>${resume ? '继续训练' : '开始训练'}</span></button>`);
+      `<button class="btn btn-soft" id="startSessionBtn" onclick="startSession(null, ${resume})">${ic(resume ? 'rotate' : 'play')}<span>${resume ? '继续跟练' : '跟练演示'}</span></button>`);
   }
 });
 

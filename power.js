@@ -1,13 +1,11 @@
 /* ═══════════════════════════════════════════════════════════
- * 增强模块：工具箱 / 统计可视化 / 本地备份 / 交互打磨
- * 借鉴 openGym（1RM、杠铃片、热力图、PR、肌群覆盖）
- *      workout.cool（多条件筛选、随机挑动作）
- *      Strong / Hevy（引导式记录、进阶建议）
- * 全部本地计算，无任何网络请求
+ * 增强模块：工具箱 / 周计划存取 / 交互打磨
+ * 借鉴 openGym（1RM、杠铃片）、workout.cool（多条件筛选、随机挑动作）
+ * 全部本地计算，无任何网络请求；不保存任何训练记录或个人成绩
  * ═══════════════════════════════════════════════════════════ */
 
-const TOOL_VIEWS = ['library', 'planner', 'musclemap', 'favorites', 'log', 'stats', 'tools'];
-const TOOL_LABEL = { library: '动作库', planner: '周计划', musclemap: '肌肉地图', favorites: '收藏', log: '记录', stats: '概览', tools: '工具箱' };
+const TOOL_VIEWS = ['library', 'planner', 'musclemap', 'tools'];
+const TOOL_LABEL = { library: '动作库', planner: '周计划', musclemap: '肌肉地图', tools: '工具箱' };
 
 /* ═════════ 工具箱 ═════════ */
 function renderTools() {
@@ -66,23 +64,33 @@ function renderTools() {
     </section>
 
     <section class="tool-card">
-      <div class="tool-h"><span class="tool-ic">${ic('download')}</span><div><h3>本地数据备份</h3><p>计划、记录、收藏、PR 全部导出成一个文件</p></div></div>
+      <div class="tool-h"><span class="tool-ic">${ic('download')}</span><div><h3>周计划存成文件</h3><p>换设备继续编辑，或者留个底</p></div></div>
       <div class="backup-row">
-        <button class="btn btn-solid" onclick="backupData()">${ic('download')}导出备份</button>
-        <label class="btn btn-soft">${ic('rotate')}导入还原<input type="file" accept="application/json,.json" style="display:none" onchange="restoreData(this)"></label>
+        <button class="btn btn-solid" onclick="backupData()">${ic('download')}导出周计划</button>
+        <label class="btn btn-soft">${ic('rotate')}从文件读回<input type="file" accept="application/json,.json" style="display:none" onchange="restoreData(this)"></label>
+        <button class="btn btn-ghost" onclick="clearLocalData()">${ic('trash')}清空本机数据</button>
       </div>
-      <p class="tool-note">文件只在本机生成，不上传任何服务器。换电脑或重装浏览器前记得导一份。</p>
+      <p class="tool-note">文件只在本机生成，不上传任何服务器。旧版备份里的周计划也能读回来。</p>
       <div id="backupInfo"></div>
     </section>
 
-    <section class="tool-card">
+    <section class="tool-card wide">
+      <div class="tool-h"><span class="tool-ic">${ic('info')}</span><div><h3>数据存在哪</h3><p>没有账号，也不上传</p></div></div>
+      <div class="data-note">
+        <p>本站是纯静态页面：没有账号系统、没有数据库、没有后端接口。运行时除了下载同源的动作 GIF 和动画分块，不发任何请求。</p>
+        <p><b>周计划只保存在这台设备的这个浏览器里</b>，另外还有跟练的临时进度和主题偏好。换浏览器、换设备、无痕窗口、清缓存都会丢；别人打开这个网址，看到的是一份全新的默认计划。</p>
+        <p>导出的训练卡图片是普通文件，不受这些限制，可以随便发、随便存。想把计划搬到别处，用上面的「导出周计划」。</p>
+      </div>
+    </section>
+
+    <section class="tool-card full">
       <div class="tool-h"><span class="tool-ic">${ic('chart')}</span><div><h3>热门度是怎么来的</h3><p>联网调研一次，固化成死数据；网站运行时完全离线</p></div></div>
       ${popularitySourcesHTML()}
     </section>
   </div>`;
   ['calc1RM', 'calcPlates', 'calcBody', 'calcHR', 'calcVol'].forEach(f => { try { window[f](); } catch (e) {} });
   const bi = document.getElementById('backupInfo');
-  if (bi) bi.innerHTML = `<p class="tool-note">当前数据：${state.trainingLog.length} 次训练 · ${state.favorites.length} 个收藏 · ${Object.keys(getPRs()).length} 个个人纪录</p>`;
+  if (bi) bi.innerHTML = `<p class="tool-note">当前周计划：${DAYS.filter(d => (state.weeklyPlan[d]?.exercises || []).length).length} 个训练日 · ${DAYS.reduce((n, d) => n + (state.weeklyPlan[d]?.exercises || []).length, 0)} 个动作</p>`;
 }
 
 function num(id, d) { const v = parseFloat(document.getElementById(id)?.value); return isFinite(v) ? v : d; }
@@ -163,20 +171,19 @@ function calcVol() {
     <p class="tool-mini">${s} 组 × ${r} 次 × ${w}kg　·　自重动作建议按「次数 × 组数」单独衡量</p>`;
 }
 
-/* ═════════ 本地备份 ═════════ */
+/* ═════════ 周计划存成文件 / 读回 / 清空本机数据 ═════════ */
 function backupData() {
   const data = {
-    app: 'FitForge', version: 2, exported: new Date().toISOString(),
-    plan: state.weeklyPlan, favorites: state.favorites, log: state.trainingLog,
-    pr: getPRs(), theme: document.documentElement.dataset.theme
+    app: 'FitForge', version: 3, exported: new Date().toISOString(),
+    plan: state.weeklyPlan, theme: document.documentElement.dataset.theme
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = 'FitForge_备份_' + new Date().toISOString().slice(0, 10) + '.json';
+  a.href = url; a.download = 'FitForge_周计划_' + new Date().toISOString().slice(0, 10) + '.json';
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 3000);
-  toast('备份文件已保存到下载目录');
+  toast('周计划已保存到下载目录');
 }
 function restoreData(input) {
   const f = input.files && input.files[0];
@@ -185,25 +192,18 @@ function restoreData(input) {
   fr.onload = () => {
     try {
       const d = JSON.parse(fr.result);
-      if (d.app !== 'FitForge') throw new Error('不是 FitForge 备份文件');
-      if (!confirm('导入会替换当前的周计划、记录、收藏和 PR。\n建议先导出一份当前备份，确定继续吗？')) return;
-      const before = {
-        plan: JSON.parse(JSON.stringify(state.weeklyPlan)),
-        favs: state.favorites.slice(), log: state.trainingLog.slice(),
-        pr: JSON.parse(JSON.stringify(getPRs()))
-      };
-      const refresh = () => { try { renderWeek(); renderGrid(); renderFavorites(); renderLogView(); renderStats(); updateFavCount(); renderTools(); } catch (e) {} };
-      if (d.plan) { state.weeklyPlan = d.plan; ssSet('ff_plan', d.plan); }
-      if (Array.isArray(d.favorites)) { state.favorites = d.favorites; ssSet('ff_favs', d.favorites); }
-      if (Array.isArray(d.log)) { state.trainingLog = d.log; ssSet('ff_log', d.log); }
-      if (d.pr) savePRs(d.pr);
-      refresh();
-      toast('数据已还原：' + (d.log || []).length + ' 次训练', 'ok', {
+      if (d.app !== 'FitForge' || !d.plan) throw new Error('不是 FitForge 周计划文件');
+      if (!confirm('导入会替换当前的周计划。\n建议先导出一份留底，确定继续吗？')) return;
+      const before = JSON.parse(JSON.stringify(state.weeklyPlan));
+      state.weeklyPlan = d.plan;
+      DAYS.forEach(day => { if (!state.weeklyPlan[day]) state.weeklyPlan[day] = { name: '', exercises: [] }; });
+      ssSet('ff_plan', state.weeklyPlan);
+      renderWeek(); renderGrid(); renderTools();
+      toast('周计划已读回', 'ok', {
         label: '撤销',
         fn: () => {
-          state.weeklyPlan = before.plan; state.favorites = before.favs; state.trainingLog = before.log;
-          ssSet('ff_plan', before.plan); ssSet('ff_favs', before.favs); ssSet('ff_log', before.log);
-          savePRs(before.pr); refresh(); toast('已恢复导入前的数据');
+          state.weeklyPlan = before; ssSet('ff_plan', before);
+          renderWeek(); renderTools(); toast('已恢复导入前的计划');
         }
       });
     } catch (e) { toast('导入失败：' + e.message, 'err'); }
@@ -211,115 +211,14 @@ function restoreData(input) {
   };
   fr.readAsText(f);
 }
-
-/* ═════════ 统计增强 ═════════ */
-function renderStatsExtra() {
-  const box = document.getElementById('statsExtra');
-  if (!box) return;
-  const logs = state.trainingLog || [];
-  const byDate = {};
-  logs.forEach(e => {
-    const d = e.timestamp ? new Date(e.timestamp) : new Date(e.date);
-    const k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    if (!byDate[k]) byDate[k] = { sets: 0, vol: 0 };
-    (e.exercises || []).forEach(x => {
-      const s = parseInt(x.sets) || 0;
-      byDate[k].sets += s;
-      byDate[k].vol += (e.volume || 0) ? 0 : s * (parseInt(x.reps) || 0) * (parseFloat(x.weight) || 0);
-    });
-    if (e.volume) byDate[k].vol += e.volume;
+/* 顺手清掉旧版本可能留下的收藏 / 训练记录 / 个人纪录，不再保留任何历史个人数据 */
+function clearLocalData() {
+  if (!confirm('会清空这台设备上的周计划、跟练进度和主题偏好，并恢复默认计划。\n导出的训练卡图片不受影响。确定继续吗？')) return;
+  ['ff_plan', 'ff_session', 'ff_theme', 'ff_tplopen', 'ff_welcomed',
+   'ff_favs', 'ff_log', 'ff_pr'].forEach(k => {
+    try { localStorage.removeItem(k); } catch (e) {}
   });
-
-  // 年度热力图（最近 26 周，按周排列）
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const cells = [];
-  for (let i = 181; i >= 0; i--) {
-    const d = new Date(today.getTime() - i * 86400000);
-    const k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    const v = byDate[k];
-    const lv = !v ? 0 : v.sets >= 20 ? 4 : v.sets >= 14 ? 3 : v.sets >= 8 ? 2 : 1;
-    cells.push(`<i class="hm lv${lv}" title="${k} · ${v ? v.sets + ' 组 / ' + Math.round(v.vol) + 'kg' : '休息'}"></i>`);
-  }
-
-  // 近 8 周容量
-  const weeks = [];
-  for (let i = 7; i >= 0; i--) {
-    const end = new Date(today.getTime() - i * 7 * 86400000);
-    const start = new Date(end.getTime() - 7 * 86400000);
-    let vol = 0, sets = 0, n = 0;
-    logs.forEach(e => {
-      const t = e.timestamp ? new Date(e.timestamp) : new Date(e.date);
-      if (t >= start && t < end) { vol += e.volume || 0; n++; (e.exercises || []).forEach(x => sets += parseInt(x.sets) || 0); }
-    });
-    weeks.push({ label: (end.getMonth() + 1) + '/' + end.getDate(), vol, sets, n });
-  }
-  const maxVol = Math.max(1, ...weeks.map(w => w.vol));
-
-  // PR 榜（从记录算 e1RM / 最大重量）
-  const prs = getPRs(), best = {};
-  logs.forEach(e => (e.exercises || []).forEach(x => {
-    const w = parseFloat(x.weight) || 0, r = parseInt(x.reps) || 0;
-    if (!w) return;
-    const score = e1rm(w, r);
-    if (!best[x.id] || score > best[x.id].score) best[x.id] = { name: x.name || x.id, w, r, score, date: e.date };
-  }));
-  Object.entries(prs).forEach(([id, p]) => {
-    if (!best[id] || p.e1rm > best[id].score) best[id] = {
-      name: (EXERCISES.find(e => e.id === id) || {}).name || id,
-      w: p.weight, r: p.reps, score: p.e1rm || e1rm(p.weight, p.reps), date: p.date
-    };
-  });
-  const prList = Object.values(best).sort((a, b) => b.score - a.score).slice(0, 8);
-
-  // 本周未覆盖肌群
-  const covered = new Set();
-  DAYS.forEach(d => (state.weeklyPlan[d]?.exercises || []).forEach(it => {
-    const ex = EXERCISES.find(e => e.id === it.id);
-    if (ex) { ex.primary.forEach(m => covered.add(m)); ex.secondary.forEach(m => covered.add(m)); }
-  }));
-  const missing = Object.entries(MUSCLE_GROUPS).filter(([k]) => !covered.has(k)).map(([, v]) => v.name);
-  const totalVol = logs.reduce((s, e) => s + (e.volume || 0), 0);
-  const totalMin = logs.reduce((s, e) => s + (e.duration || 0), 0);
-
-  const volT = totalVol >= 1000;
-  const volText = totalVol ? (volT ? (totalVol / 1000).toFixed(1) : Math.round(totalVol)) : '—';
-  const volUnit = volT ? 't' : 'kg';
-
-  box.innerHTML = `
-    ${logs.length ? `
-    <div class="stat-mini-row">
-      <div><b>${logs.length}</b><span>累计训练</span></div>
-      <div><b>${totalMin}</b><span>训练分钟</span></div>
-      <div><b>${volText}${totalVol ? `<small>${volUnit}</small>` : ''}</b><span>累计容量</span></div>
-      <div><b>${prList.length}</b><span>有 PR 动作</span></div>
-    </div>
-    <div class="chart-card">
-      <h3>训练热力图 <span class="chart-sub">最近 26 周 · 颜色越深练得越多</span></h3>
-      <div class="heatmap">${cells.join('')}</div>
-      <div class="hm-legend">少 <i class="hm lv0"></i><i class="hm lv1"></i><i class="hm lv2"></i><i class="hm lv3"></i><i class="hm lv4"></i> 多</div>
-    </div>
-    <div class="chart-card">
-      <h3>近 8 周训练容量 <span class="chart-sub">${volUnit}</span></h3>
-      <div class="wchart">${weeks.map(w => `<div class="wcol" title="${w.label} · ${w.n} 次训练 / ${Math.round(w.vol)}kg">
-        <div class="wbar-wrap"><div class="wbar" style="height:${Math.max(w.vol ? 6 : 2, w.vol / maxVol * 100)}%"></div></div>
-        <span>${w.label}</span></div>`).join('')}</div>
-    </div>` : `
-    <div class="stats-empty">
-      <span class="se-ic">${ic('chart')}</span>
-      <div class="se-txt"><b>还没有训练数据</b><p>练完一次，这里会出现热力图、容量曲线和个人纪录。</p></div>
-      <button class="btn btn-solid btn-sm" onclick="startSession()">${ic('play')}开始训练</button>
-    </div>`}
-    <div class="two-col">
-      <div class="chart-card"><h3>个人纪录 PR</h3>
-        ${prList.length ? prList.map((p, i) => `<div class="pr-row"><b>${String(i + 1).padStart(2, '0')}</b><span>${p.name}</span><em>${p.w}kg × ${p.r}</em><i>e1RM ${p.score}kg</i></div>`).join('')
-          : '<p class="tool-note">跟练时填上重量，系统会自动记下每个动作的最佳成绩。</p>'}
-      </div>
-      <div class="chart-card"><h3>本周肌群覆盖</h3>
-        <p class="tool-note">已覆盖 ${covered.size} / ${Object.keys(MUSCLE_GROUPS).length} 个肌群</p>
-        ${missing.length ? `<div class="miss-tags">${missing.map(m => `<span>${m}</span>`).join('')}</div><p class="tool-note">这些肌群本周还没练到，可以补一两个动作。</p>`
-          : '<p class="tool-note ok">全部肌群都有练到，安排很均衡。</p>'}
-      </div>
-    </div>`;
+  location.reload();
 }
 
 /* ═════════ 筛选与搜索增强 ═════════ */
@@ -553,15 +452,13 @@ showDetail = function (id) {
     `<button class="btn btn-soft" onclick="closeModal('detailModal');startSingleSession('${id}')">${ic('play')}跟练这个动作</button>`);
 };
 
-/* ═════════ 视图切换 & 统计挂钩 ═════════ */
+/* ═════════ 视图切换 ═════════ */
 const _origSwitchView = switchView;
 switchView = function (v, fromPop) {
   _origSwitchView(v, fromPop);
   if (v === 'tools') renderTools();
   document.querySelectorAll('.bottom-nav .bn-item').forEach(b => b.classList.toggle('on', b.dataset.view === v));
 };
-const _origRenderStats = renderStats;
-renderStats = function () { _origRenderStats(); try { renderStatsExtra(); } catch (e) { console.warn(e); } };
 
 /* ═════════ 快捷键 / 底部导航 / 帮助 ═════════ */
 function openHelp() {
@@ -570,10 +467,9 @@ function openHelp() {
 }
 document.addEventListener('keydown', e => {
   if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
-  if (e.key >= '1' && e.key <= '7') { switchView(TOOL_VIEWS[+e.key - 1]); return; }
+  if (e.key >= '1' && e.key <= '4') { switchView(TOOL_VIEWS[+e.key - 1]); return; }
   if (e.key === 's' || e.key === 'S') { startSession(); return; }
   if (e.key === 't' || e.key === 'T') { toggleTheme(); return; }
-  if (e.key === 'n' || e.key === 'N') { showLogModal(); return; }
   if (e.key === '?') { e.preventDefault(); openHelp(); return; }
   // Esc 由 app.js 统一处理：只关最上层弹窗，避免一次按掉多层
 });
@@ -641,7 +537,7 @@ function dismissWelcome() {
 
 function buildBottomNav() {
   if (document.querySelector('.bottom-nav')) return;
-  const icons = { library: 'grid', planner: 'calendar', musclemap: 'target', favorites: 'heart', log: 'clipboard', stats: 'chart', tools: 'sliders' };
+  const icons = { library: 'grid', planner: 'calendar', musclemap: 'target', tools: 'sliders' };
   const nav = document.createElement('nav');
   nav.className = 'bottom-nav';
   nav.innerHTML = TOOL_VIEWS.map(v => `<button class="bn-item ${v === 'library' ? 'on' : ''}" data-view="${v}">${ic(icons[v])}<span>${TOOL_LABEL[v]}</span></button>`).join('');
@@ -654,7 +550,6 @@ document.addEventListener('DOMContentLoaded', () => {
   try { buildBottomNav(); } catch (e) {}
   try { renderTplRow(); } catch (e) {}
   try { updateTodayStrip(); } catch (e) {}
-  try { renderStatsExtra(); } catch (e) {}
   try { updateFilterBadge(); } catch (e) {}
   try {
     if (localStorage.getItem('ff_welcomed') !== '1') {
@@ -671,6 +566,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (topRight) {
     const resume = hasSavedSession();
     topRight.insertAdjacentHTML('afterbegin',
-      `<button class="btn btn-soft" id="startSessionBtn" onclick="startSession(null, ${resume})">${ic(resume ? 'rotate' : 'play')}<span>${resume ? '继续训练' : '开始训练'}</span></button>`);
+      `<button class="btn btn-soft" id="startSessionBtn" onclick="startSession(null, ${resume})">${ic(resume ? 'rotate' : 'play')}<span>${resume ? '继续跟练' : '跟练演示'}</span></button>`);
   }
 });

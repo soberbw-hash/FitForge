@@ -14,8 +14,6 @@ let state = {
   selectedMuscle: null,
   bodyView: 'front',
   weeklyPlan: {},
-  favorites: [],
-  trainingLog: [],
   pickerTargetDay: null,
   displayLimit: 48,
   muscleFilter: 'all',
@@ -55,8 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme();
 
   try { state.weeklyPlan = _get('ff_plan', null) || {}; } catch(e) {}
-  try { state.favorites = _get('ff_favs', []); } catch(e) { state.favorites = []; }
-  try { state.trainingLog = _get('ff_log', []); } catch(e) { state.trainingLog = []; }
   DAYS.forEach(d => { if (!state.weeklyPlan[d]) state.weeklyPlan[d] = { name:'', exercises:[] }; });
 
   // 首次打开：默认载入「新手入门」模板，避免周计划一片空白
@@ -84,8 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
   try { renderWeek(); } catch(e) {}
   try { renderBodyMap(); } catch(e) {}
   try { renderMuscleLegend(); } catch(e) {}
-  try { renderStats(); } catch(e) {}
-  try { updateFavCount(); } catch(e) {}
   try { initTimer(); } catch(e) {}
 
   // 顶栏导航：事件委托，任何带 data-view 的元素都能触发切换
@@ -112,10 +106,7 @@ function switchView(v, fromPop) {
   document.querySelectorAll('.view').forEach(s => s.classList.remove('active'));
   const el = document.getElementById(`view-${v}`);
   if (el) el.classList.add('active');
-  if (v === 'stats') renderStats();
   if (v === 'planner') renderWeek();
-  if (v === 'log') renderLogView();
-  if (v === 'favorites') renderFavorites();
   if (!fromPop) {
     try {
       const h = '#' + v;
@@ -237,20 +228,18 @@ function getFiltered() {
 }
 
 /* ═══ GRID ═══ */
-function cardHTML(ex, showFav = true) {
+function cardHTML(ex) {
   /* 有氧动作在原始数据里被标成「腹肌」，展示上改为「有氧全身」更贴合实际 */
   const mg = ex.category === 'cardio'
     ? { name: '有氧全身', color: '#4C9A86' }
     : MUSCLE_GROUPS[ex.primary[0]];
   const diffCls = { beginner:'beg', intermediate:'int', advanced:'adv' }[ex.difficulty] || 'beg';
   const diffName = DIFFICULTY[ex.difficulty]?.name || '';
-  const isFav = state.favorites.includes(ex.id);
   const eq = EQUIPMENT[ex.equipment]?.name || ex.equipment;
 
   return `<article class="card" onclick="showDetail('${ex.id}')">
     <div class="card-media">
       <img src="${ex.gifUrl}" alt="${ex.name}" loading="lazy">
-      ${showFav ? `<button class="fav ${isFav?'on':''}" onclick="event.stopPropagation();toggleFav('${ex.id}')" title="收藏">${ic(isFav?'heart-fill':'heart')}</button>` : ''}
       ${heatPillHTML(ex)}
     </div>
     <div class="card-body">
@@ -303,34 +292,6 @@ function showAllResults() {
   state.displayLimit = getFiltered().length;
   renderGrid();
   toast('已显示全部动作，往下翻就行');
-}
-
-/* ─── Favorites ─── */
-function toggleFav(id) {
-  const idx = state.favorites.indexOf(id);
-  if (idx >= 0) { state.favorites.splice(idx, 1); toast('已取消收藏'); }
-  else { state.favorites.push(id); toast('已加入收藏'); }
-  _set('ff_favs', state.favorites);
-  updateFavCount();
-  renderGrid();
-  if (state.view === 'favorites') renderFavorites();
-}
-function updateFavCount() {
-  const el = document.getElementById('favCount');
-  if (!el) return;
-  el.textContent = state.favorites.length;
-  el.dataset.zero = state.favorites.length ? '0' : '1';
-}
-function renderFavorites() {
-  const grid = document.getElementById('favGrid');
-  if (!grid) return;
-  const favs = EXERCISES.filter(e => state.favorites.includes(e.id));
-  if (favs.length === 0) {
-    grid.innerHTML = emptyHTML('heart', '这里还空着', '把常练的动作收进来，下次一点就到',
-      `<button class="btn btn-solid btn-sm" onclick="switchView('library')">${ic('grid')}去挑动作</button>`);
-    return;
-  }
-  grid.innerHTML = favs.map(ex => cardHTML(ex)).join('');
 }
 
 /* ═══ DETAIL ═══ */
@@ -692,82 +653,6 @@ function updateTimerDisplay() {
   if (btn) btn.innerHTML = timerState.running ? ic('pause') : ic('play');
 }
 
-/* ═══ TRAINING LOG ═══ */
-function showLogModal() {
-  const today = new Date().toLocaleDateString('zh-CN');
-  const dayKey = DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
-  const plan = state.weeklyPlan[dayKey]?.exercises || [];
-
-  if (plan.length === 0) {
-    toast('今天没有安排训练动作', 'err');
-    return;
-  }
-
-  document.getElementById('logDate').textContent = today;
-  document.getElementById('logExList').innerHTML = plan.map((item, i) => {
-    const ex = EXERCISES.find(e => e.id === item.id);
-    if (!ex) return '';
-    return `<div class="log-ex">
-      <div class="ln">${ex.name}</div>
-      <div class="log-input">
-        <input type="number" value="${parseInt(item.sets)||3}" id="logSets${i}" min="1" title="组数">×
-        <input type="number" value="${parseInt(item.reps)||10}" id="logReps${i}" min="1" title="次数">
-        <input type="number" class="w" placeholder="kg" id="logWeight${i}" min="0" step="0.5" title="重量">
-      </div>
-    </div>`;
-  }).join('');
-
-  openModal('logModal');
-}
-
-function saveLog() {
-  const today = new Date().toLocaleDateString('zh-CN');
-  const dayKey = DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
-  const plan = state.weeklyPlan[dayKey]?.exercises || [];
-
-  const entry = {
-    date: today,
-    timestamp: Date.now(),
-    exercises: plan.map((item, i) => {
-      const ex = EXERCISES.find(e => e.id === item.id);
-      return {
-        id: item.id,
-        name: ex?.name || '',
-        sets: parseInt(document.getElementById(`logSets${i}`)?.value) || 3,
-        reps: parseInt(document.getElementById(`logReps${i}`)?.value) || 10,
-        weight: parseFloat(document.getElementById(`logWeight${i}`)?.value) || 0,
-      };
-    }).filter(e => e.name)
-  };
-
-  state.trainingLog.unshift(entry);
-  if (state.trainingLog.length > 100) state.trainingLog = state.trainingLog.slice(0, 100);
-  _set('ff_log', state.trainingLog);
-  closeModal('logModal');
-  toast('训练记录已保存');
-  if (state.view === 'log') renderLogView();
-}
-
-function renderLogView() {
-  const container = document.getElementById('logList');
-  if (!container) return;
-  if (state.trainingLog.length === 0) {
-    container.innerHTML = emptyHTML('clipboard', '还没有训练记录', '跟着计划练一次，数据会自动存进来',
-      `<button class="btn btn-solid btn-sm" onclick="startSession()">${ic('play')}开始今天的训练</button>
-       <button class="btn btn-ghost btn-sm" onclick="showLogModal()">${ic('plus')}补录一次</button>`);
-    return;
-  }
-  container.innerHTML = state.trainingLog.map(entry => `
-    <div class="log-card">
-      <div class="log-date">${entry.date}</div>
-      ${entry.exercises.map(ex => `
-        <div class="log-ex">
-          <div class="ln">${ex.name}</div>
-          <div class="ls">${ex.sets}×${ex.reps}${ex.weight ? ' @'+ex.weight+'kg' : ''}</div>
-        </div>`).join('')}
-    </div>`).join('');
-}
-
 /* ═══ MUSCLE MAP ═══ */
 function showBodyView(v) {
   state.bodyView = v;
@@ -858,63 +743,6 @@ function selectMuscle(key) {
         </div>`;
       }).join('')}
       ${exercises.length > 24 ? `<div style="text-align:center;padding:8px;font-size:11.5px;color:var(--t4)">还有 ${exercises.length - 24} 个动作</div>` : ''}
-    </div>`;
-}
-
-/* ═══ STATS ═══ */
-function renderStats() {
-  const grid = document.getElementById('statsRow');
-  const detail = document.getElementById('statsDetail');
-  if (!grid) return;
-
-  let totalEx = 0, totalSets = 0;
-  const muscles = new Set(), equips = new Set();
-  DAYS.forEach(d => {
-    (state.weeklyPlan[d]?.exercises || []).forEach(item => {
-      totalEx++;
-      totalSets += parseInt(item.sets) || 3;
-      const ex = EXERCISES.find(e => e.id === item.id);
-      if (ex) {
-        ex.primary.forEach(m => muscles.add(m));
-        ex.secondary.forEach(m => muscles.add(m));
-        equips.add(ex.equipment);
-      }
-    });
-  });
-  const trainDays = DAYS.filter(d => (state.weeklyPlan[d]?.exercises || []).length > 0).length;
-  const totalMuscles = Object.keys(MUSCLE_GROUPS).length;
-
-  grid.innerHTML = `
-    <div class="stat"><div class="stat-v">${totalEx}</div><div class="stat-l">计划动作数</div><div class="stat-tag ok">${trainDays} 个训练日</div></div>
-    <div class="stat"><div class="stat-v">${totalSets}</div><div class="stat-l">总训练组数</div><div class="stat-tag ok">本周安排</div></div>
-    <div class="stat"><div class="stat-v">${muscles.size}<small>/${totalMuscles}</small></div><div class="stat-l">覆盖肌群</div><div class="stat-tag ${muscles.size===totalMuscles?'ok':'no'}">${muscles.size===totalMuscles?'全部练到':(totalMuscles-muscles.size)+' 个待补'}</div></div>
-    <div class="stat"><div class="stat-v">${state.trainingLog.length}</div><div class="stat-l">训练记录</div><div class="stat-tag ok">累计</div></div>
-  `;
-
-  const coverage = Object.entries(MUSCLE_GROUPS).map(([key, mg]) => {
-    let sets = 0;
-    DAYS.forEach(d => {
-      (state.weeklyPlan[d]?.exercises || []).forEach(item => {
-        const ex = EXERCISES.find(e => e.id === item.id);
-        if (ex && (ex.primary.includes(key) || ex.secondary.includes(key))) sets += parseInt(item.sets)||3;
-      });
-    });
-    return { key, ...mg, sets };
-  }).sort((a,b) => b.sets - a.sets);
-
-  const active = coverage.filter(m => m.sets > 0);
-  const idle = coverage.length - active.length;
-  detail.innerHTML = `
-    <div class="chart-card">
-      <h3>各肌群训练量分布 <span class="chart-sub">本周计划</span></h3>
-      ${active.length ? active.map(m => `
-        <div class="brow">
-          <div class="blabel"><span class="bdot" style="background:${m.color}"></span>${m.name}</div>
-          <div class="btrack"><div class="bfill" style="width:${Math.min((m.sets/20)*100,100)}%;background:${m.color}"></div></div>
-          <div class="bval">${m.sets} 组</div>
-        </div>`).join('')
-        : '<p class="tool-note">还没安排训练动作，先去周计划挑一套模板。</p>'}
-      ${idle ? `<p class="chart-foot">另有 ${idle} 个肌群本周未安排</p>` : ''}
     </div>`;
 }
 

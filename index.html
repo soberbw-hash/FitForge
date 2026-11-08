@@ -56,16 +56,12 @@
       <button class="nav-item active" data-view="library"><svg class="ic"><use href="#i-grid"/></svg><span>动作库</span></button>
       <button class="nav-item" data-view="planner"><svg class="ic"><use href="#i-calendar"/></svg><span>周计划</span></button>
       <button class="nav-item" data-view="musclemap"><svg class="ic"><use href="#i-target"/></svg><span>肌肉地图</span></button>
-      <button class="nav-item" data-view="favorites"><svg class="ic"><use href="#i-heart"/></svg><span>收藏</span><i class="nav-count" id="favCount">0</i></button>
-      <button class="nav-item" data-view="log"><svg class="ic"><use href="#i-clipboard"/></svg><span>记录</span></button>
-      <button class="nav-item" data-view="stats"><svg class="ic"><use href="#i-chart"/></svg><span>概览</span></button>
       <button class="nav-item" data-view="tools"><svg class="ic"><use href="#i-sliders"/></svg><span>工具箱</span></button>
     </nav>
 
     <div class="top-right">
       <button class="icon-btn" id="todayCardBtn" title="今日训练卡" aria-label="查看今日训练卡" onclick="openExport('today')"><svg class="ic"><use href="#i-image"/></svg></button>
       <button class="icon-btn" id="themeBtn" title="切换深浅主题" aria-label="切换深浅主题"><svg class="ic"><use href="#i-moon"/></svg></button>
-      <button class="btn btn-solid" id="logTopBtn" title="补录一次已完成的训练" onclick="showLogModal()"><svg class="ic"><use href="#i-plus"/></svg><span>补录</span></button>
     </div>
   </div>
 </header>
@@ -83,7 +79,7 @@
 
     <div class="welcome-bar" id="welcomeBar" hidden>
       <span class="wb-ic"><svg class="ic"><use href="#i-info"/></svg></span>
-      <div class="wb-txt"><b>第一次用？三步开练</b><span>在周计划挑一套模板 → 点顶栏「开始训练」跟着做 → 需要时导出训练卡</span></div>
+      <div class="wb-txt"><b>第一次用？三步做一张训练卡</b><span>动作库挑动作 → 排进周计划 → 导出成图片，随时翻出来看</span></div>
       <div class="wb-acts">
         <button class="btn btn-solid btn-sm" onclick="dismissWelcome();switchView('planner')">去排计划</button>
         <button class="btn btn-ghost btn-sm" onclick="dismissWelcome()">知道了</button>
@@ -147,12 +143,17 @@
     <div class="page-head">
       <div>
         <h1>周计划</h1>
-        <p class="page-sub">点动作改组次，点「+」加动作</p>
+        <p class="page-sub">排好一周，导出成训练卡图片作参考</p>
       </div>
       <div class="head-actions">
         <button class="btn btn-ghost" onclick="clearPlan()"><svg class="ic"><use href="#i-trash"/></svg>清空</button>
         <button class="btn btn-solid" onclick="openExport('all')"><svg class="ic"><use href="#i-image"/></svg>导出训练卡</button>
       </div>
+    </div>
+
+    <div class="local-note">
+      <svg class="ic"><use href="#i-info"/></svg>
+      <span>这只是<b>做训练卡的编辑器</b>：本站没有账号，服务器不存任何数据。周计划仅保存在当前这台设备的浏览器里，换设备或清缓存会消失；导出的图片是普通文件，可以随便发、随便存。想在别处接着改，去工具箱导出一份计划文件。</span>
     </div>
 
     <div id="todayStrip"></div>
@@ -185,47 +186,12 @@
     </div>
   </section>
 
-  <!-- ═══ FAVORITES ═══ -->
-  <section class="view" id="view-favorites">
-    <div class="page-head">
-      <div>
-        <h1>收藏</h1>
-        <p class="page-sub">把常练的动作放这儿</p>
-      </div>
-    </div>
-    <div class="grid" id="favGrid"></div>
-  </section>
-
-  <!-- ═══ LOG ═══ -->
-  <section class="view" id="view-log">
-    <div class="page-head">
-      <div>
-        <h1>训练记录</h1>
-        <p class="page-sub">每次完成的组数、次数与重量</p>
-      </div>
-    </div>
-    <div id="logList" class="log-list"></div>
-  </section>
-
-  <!-- ═══ STATS ═══ -->
-  <section class="view" id="view-stats">
-    <div class="page-head">
-      <div>
-        <h1>概览</h1>
-        <p class="page-sub">练了多少、还差哪儿</p>
-      </div>
-    </div>
-    <div class="stat-row" id="statsRow"></div>
-    <div id="statsDetail"></div>
-    <div id="statsExtra"></div>
-  </section>
-
   <!-- ═══ TOOLS ═══ -->
   <section class="view" id="view-tools">
     <div class="page-head">
       <div>
         <h1>工具箱</h1>
-        <p class="page-sub">常用计算与本地备份</p>
+        <p class="page-sub">常用计算 · 计划存取 · 数据说明</p>
       </div>
     </div>
     <div id="toolsBody"></div>
@@ -255,24 +221,6 @@
         <input type="text" id="pickerSearch" placeholder="搜索动作…" oninput="filterPicker()" aria-label="搜索要添加的动作">
       </div>
       <div class="picker-list" id="pickerList"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ LOG MODAL ═══ -->
-<div class="overlay" id="logModal">
-  <div class="modal">
-    <div class="modal-head">
-      <h3>补录训练 <span class="modal-date" id="logDate"></span></h3>
-      <button class="modal-x" onclick="closeModal('logModal')" aria-label="关闭"><svg class="ic"><use href="#i-x"/></svg></button>
-    </div>
-    <div class="modal-body">
-      <p class="hint">填今天实际练了什么，跟练模式会自动帮你记</p>
-      <div id="logExList"></div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-solid" onclick="saveLog()"><svg class="ic"><use href="#i-check"/></svg>保存记录</button>
-      <button class="btn btn-ghost" onclick="closeModal('logModal')">取消</button>
     </div>
   </div>
 </div>
@@ -370,10 +318,9 @@
     </div>
     <div class="modal-body">
       <div class="shortcut-list">
-        <div><kbd>1</kbd>–<kbd>7</kbd><span>依次切换：动作库 · 周计划 · 肌肉地图 · 收藏 · 记录 · 概览 · 工具箱</span></div>
+        <div><kbd>1</kbd>–<kbd>4</kbd><span>依次切换：动作库 · 周计划 · 肌肉地图 · 工具箱</span></div>
         <div><kbd>/</kbd><span>聚焦搜索框</span></div>
-        <div><kbd>S</kbd><span>开始今天的训练</span></div>
-        <div><kbd>N</kbd><span>补录一次训练</span></div>
+        <div><kbd>S</kbd><span>按今天计划看动作</span></div>
         <div><kbd>T</kbd><span>切换深浅主题</span></div>
         <div><kbd>Esc</kbd><span>关闭当前弹窗</span></div>
         <div><kbd>?</kbd><span>打开这个帮助</span></div>

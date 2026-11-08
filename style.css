@@ -1073,6 +1073,7 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
 
 /* 工具箱 */
 .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 14px; }
+.tool-grid { align-items: start; }
 .tool-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-xl); padding: 20px 22px; }
 .tool-h { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
 .tool-ic { flex: 0 0 36px; height: 36px; border-radius: 11px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
@@ -1417,6 +1418,14 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
   .body-svg { max-width: 300px; }
 }
 
+/* 说明类卡片在宽屏占更宽的列，避免把同行计算卡拉出大片空白 */
+@media (min-width: 1200px) {
+  .tool-card.wide { grid-column: span 2; }
+  .tool-card.full { grid-column: 1 / -1; }
+  .tool-card.full .pop-src-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tool-card.full .pop-src { padding: 10px 14px; }
+}
+
 /* ═══════════════════════════════════════════════════════════
    难度星级 · 热门度 · 常驻排序
    ═══════════════════════════════════════════════════════════ */
@@ -1496,4 +1505,23 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
 @media (max-width: 620px) {
   .pop-src { flex-direction: column; align-items: flex-start; gap: 4px; }
   .pop-src-r { text-align: left; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   本机数据说明（无账号 / 无服务器）
+   ═══════════════════════════════════════════════════════════ */
+.local-note {
+  display: flex; align-items: flex-start; gap: 9px;
+  padding: 11px 14px; margin-bottom: 16px;
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--t3); font-size: 12.5px; line-height: 1.75;
+}
+.local-note .ic { width: 15px; height: 15px; flex-shrink: 0; margin-top: 3px; color: var(--accent); }
+.local-note b { color: var(--t2); font-weight: 600; }
+.data-note p { margin: 0 0 8px; font-size: 12.5px; line-height: 1.8; color: var(--t3); }
+.data-note p:last-child { margin-bottom: 0; }
+.data-note b { color: var(--t2); font-weight: 600; }
+@media (max-width: 620px) {
+  .local-note { padding: 10px 12px; font-size: 12px; }
 }
