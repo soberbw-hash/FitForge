@@ -23,7 +23,7 @@ const parts = [
   ['app.js', '应用逻辑'],
   ['export_card.js', '训练卡导出'],
   ['session.js', '跟练演示（不记录）'],
-  ['power.js', '工具箱 / 周计划存取 / 交互增强'],
+  ['power.js', '工具箱计算 / 筛选与交互增强'],
   ['anim_loader.js', '线上动画分块加载']
 ];
 

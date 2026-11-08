@@ -1071,20 +1071,30 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
 .extra-tags span { font-size: 11px; color: var(--t2); background: var(--surface-3); padding: 4px 10px; border-radius: 20px; }
 .credit { font-size: 10.5px; color: var(--t4); margin-top: 14px; }
 
-/* 工具箱 */
+/* 工具箱：5 个工具。上排 3 张各占 1/3，下排 2 张各占 1/2，两行都铺满且等高 */
 .tool-grid {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
   grid-auto-rows: 1fr; gap: 14px; align-items: stretch;
 }
 .tool-card {
+  grid-column: span 2;
   display: flex; flex-direction: column; min-height: 0;
   background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--r-xl); padding: 18px 20px;
 }
-/* 轻量卡内容居中，和带表格的卡等大时不会显得头重脚轻 */
-.tool-grid > .tool-card:nth-child(n+4) { justify-content: center; }
+/* 轻量卡内容居中，和带表格的卡等高时不会显得头重脚轻 */
+.tool-grid > .tool-card:nth-child(n+4) { grid-column: span 3; justify-content: center; }
 @media (min-width: 621px) and (max-width: 1100px) {
-  .tool-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tool-grid { grid-auto-rows: auto; }
+  .tool-grid > .tool-card,
+  .tool-grid > .tool-card:nth-child(n+4) { grid-column: span 3; }
+  .tool-grid > .tool-card:last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 620px) {
+  .tool-grid { grid-template-columns: 1fr; grid-auto-rows: auto; }
+  .tool-grid > .tool-card,
+  .tool-grid > .tool-card:nth-child(n+4),
+  .tool-grid > .tool-card:last-child { grid-column: auto; }
 }
 .tool-h { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
 .tool-ic { flex: 0 0 36px; height: 36px; border-radius: 11px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
@@ -1126,8 +1136,6 @@ h1,h2,h3,h4 { font-weight: 650; letter-spacing: -0.02em; line-height: 1.25; }
 .macro { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
 .macro span { font-size: 11.5px; color: var(--t2); background: var(--accent-soft); padding: 5px 10px; border-radius: 20px; }
 .macro b { color: var(--accent); }
-.backup-row { display: flex; gap: 10px; flex-wrap: wrap; }
-.backup-row .btn { cursor: pointer; }
 
 /* 统计增强 */
 .chart-sub { font-size: 11px; font-weight: 400; color: var(--t4); margin-left: 8px; }

@@ -1,13 +1,11 @@
 """专项验收：无账号 / 无服务端存储改造
 - 只保留周计划与界面偏好，不写收藏 / 训练记录 / PR / 浏览记录
-- 周计划导出 / 读回 / 清空本机数据可用
+- 周计划导出 / 读回 / 清空本机数据已移除，工具箱只留 5 个计算器
 - 跟练完成不落盘
 - 导出训练卡链路不受影响（由 _verify_final.js 覆盖）
 """
 import functools
 import json
-import os
-import tempfile
 import threading
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
@@ -85,7 +83,11 @@ def main():
                         sources: m.querySelectorAll('.pop-src').length, leftoverNotes: leftover,
                         toolsCards: document.querySelectorAll('.tool-card').length,
                         text: d ? d.textContent.replace(/\\s+/g,' ').trim().slice(0,60) : '',
-                        clearBtn: typeof clearLocalData === 'function',
+                        removedFns: typeof backupData === 'undefined'
+                          && typeof restoreData === 'undefined'
+                          && typeof clearLocalData === 'undefined',
+                        noBackupUI: !document.body.textContent.includes('导出周计划')
+                          && !document.body.textContent.includes('清空本机数据'),
                         overflow: document.documentElement.scrollWidth - innerWidth };
             closeModal('aboutModal');
             switchView('library');
@@ -101,31 +103,15 @@ def main():
         }""")
         out['afterEditKeys'] = keys(page)
 
-        # 导出周计划 → 检查文件字段
-        with page.expect_download(timeout=30000) as dl:
-            page.evaluate('backupData()')
-        download = dl.value
-        with open(download.path(), 'r', encoding='utf8') as f:
-            data = json.load(f)
-        out['backupFields'] = sorted(data.keys())
-        out['backupClean'] = not any(k in data for k in ['favorites', 'log', 'pr'])
-        out['backupPlanDays'] = len(data.get('plan', {}))
-
-        # 从文件读回（旧版备份也兼容：夹带无用字段应被忽略）
-        data['plan']['mon']['exercises'] = data['plan']['mon']['exercises'][:1]
-        data['favorites'] = ['0001']
-        data['log'] = [{'exercises': []}]
-        tmp = os.path.join(tempfile.gettempdir(), '_ff_plan_check.json')
-        with open(tmp, 'w', encoding='utf8') as f:
-            json.dump(data, f, ensure_ascii=False)
-        page.set_input_files('input[type=file]', tmp)
-        page.wait_for_timeout(600)
-        out['restore'] = page.evaluate("""() => ({
-            monCount: state.weeklyPlan.mon.exercises.length,
-            storedKeys: Object.keys(localStorage).sort(),
-            undoShown: document.body.textContent.includes('撤销')
-        })""")
-        os.remove(tmp)
+        # 页面加载时应静默清掉旧版个人数据键
+        out['legacyKeysClean'] = page.evaluate("""() => {
+            ['ff_favs', 'ff_log', 'ff_pr'].forEach(k => localStorage.setItem(k, 'old'));
+            return true;
+        }""")
+        page.reload(wait_until='domcontentloaded', timeout=90000)
+        page.wait_for_selector('.card', timeout=30000)
+        out['afterReloadKeys'] = keys(page)
+        out['legacyCleaned'] = not any(k in out['afterReloadKeys'] for k in BANNED)
 
         # 跟练完成：不写 ff_log / ff_pr，完成页说明不保存
         out['session'] = page.evaluate("""() => {
@@ -183,7 +169,7 @@ def main():
     print(json.dumps(out, ensure_ascii=False, indent=2))
 
     fails = []
-    if not out['initialClean'] or not out['backupClean'] or not out['sessionClean']:
+    if not out['initialClean'] or not out['sessionClean'] or not out['legacyCleaned']:
         fails.append('仍写入个人数据')
     if out['views']['favBtns'] or out['views']['removed'] or not out['views']['localNote']:
         fails.append('已删功能残留')
@@ -194,7 +180,8 @@ def main():
     if out['jsErrors'] or out['badResponses']:
         fails.append('有 JS 报错或 4xx')
     a = out['aboutDataNote']
-    if not a['exists'] or not a['open'] or a['sources'] != 6 or a['leftoverNotes'] or a['toolsCards'] != 6:
+    if (not a['exists'] or not a['open'] or a['sources'] != 6 or a['leftoverNotes']
+            or a['toolsCards'] != 5 or not a['removedFns'] or not a['noBackupUI']):
         fails.append('关于弹窗内容或工具箱清理不彻底')
     if out['mobilePlanner']['overflow'] or out['mobileTools']['overflow'] or out['mobileAbout']['overflow']:
         fails.append('手机端横向溢出')

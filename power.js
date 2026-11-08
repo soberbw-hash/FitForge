@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
- * 增强模块：工具箱 / 周计划存取 / 交互打磨
+ * 增强模块：工具箱计算 / 筛选与交互打磨
  * 借鉴 openGym（1RM、杠铃片）、workout.cool（多条件筛选、随机挑动作）
  * 全部本地计算，无任何网络请求；不保存任何训练记录或个人成绩
  * ═══════════════════════════════════════════════════════════ */
@@ -63,20 +63,8 @@ function renderTools() {
       <div id="volOut"></div>
     </section>
 
-    <section class="tool-card">
-      <div class="tool-h"><span class="tool-ic">${ic('download')}</span><div><h3>周计划存成文件</h3><p>换设备继续编辑</p></div></div>
-      <div class="backup-row">
-        <button class="btn btn-solid" onclick="backupData()">${ic('download')}导出周计划</button>
-        <label class="btn btn-soft">${ic('rotate')}从文件读回<input type="file" accept="application/json,.json" style="display:none" onchange="restoreData(this)"></label>
-        <button class="btn btn-ghost" onclick="clearLocalData()">${ic('trash')}清空本机数据</button>
-      </div>
-      <p class="tool-note">文件只在本机生成，旧版备份也能读回。</p>
-      <div id="backupInfo"></div>
-    </section>
   </div>`;
   ['calc1RM', 'calcPlates', 'calcBody', 'calcHR', 'calcVol'].forEach(f => { try { window[f](); } catch (e) {} });
-  const bi = document.getElementById('backupInfo');
-  if (bi) bi.innerHTML = `<p class="tool-note">当前周计划：${DAYS.filter(d => (state.weeklyPlan[d]?.exercises || []).length).length} 个训练日 · ${DAYS.reduce((n, d) => n + (state.weeklyPlan[d]?.exercises || []).length, 0)} 个动作</p>`;
 }
 
 function num(id, d) { const v = parseFloat(document.getElementById(id)?.value); return isFinite(v) ? v : d; }
@@ -157,55 +145,10 @@ function calcVol() {
     <p class="tool-mini">${s} 组 × ${r} 次 × ${w}kg　·　自重动作只计组数次数</p>`;
 }
 
-/* ═════════ 周计划存成文件 / 读回 / 清空本机数据 ═════════ */
-function backupData() {
-  const data = {
-    app: 'FitForge', version: 3, exported: new Date().toISOString(),
-    plan: state.weeklyPlan, theme: document.documentElement.dataset.theme
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'FitForge_周计划_' + new Date().toISOString().slice(0, 10) + '.json';
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 3000);
-  toast('周计划已保存到下载目录');
-}
-function restoreData(input) {
-  const f = input.files && input.files[0];
-  if (!f) return;
-  const fr = new FileReader();
-  fr.onload = () => {
-    try {
-      const d = JSON.parse(fr.result);
-      if (d.app !== 'FitForge' || !d.plan) throw new Error('不是 FitForge 周计划文件');
-      if (!confirm('导入会替换当前周计划，继续吗？')) return;
-      const before = JSON.parse(JSON.stringify(state.weeklyPlan));
-      state.weeklyPlan = d.plan;
-      DAYS.forEach(day => { if (!state.weeklyPlan[day]) state.weeklyPlan[day] = { name: '', exercises: [] }; });
-      ssSet('ff_plan', state.weeklyPlan);
-      renderWeek(); renderGrid(); renderTools();
-      toast('周计划已读回', 'ok', {
-        label: '撤销',
-        fn: () => {
-          state.weeklyPlan = before; ssSet('ff_plan', before);
-          renderWeek(); renderTools(); toast('已恢复导入前的计划');
-        }
-      });
-    } catch (e) { toast('导入失败：' + e.message, 'err'); }
-    input.value = '';
-  };
-  fr.readAsText(f);
-}
-/* 顺手清掉旧版本可能留下的收藏 / 训练记录 / 个人纪录，不再保留任何历史个人数据 */
-function clearLocalData() {
-  if (!confirm('清空本机周计划、跟练进度和主题偏好，恢复默认计划。导出的训练卡不受影响，继续吗？')) return;
-  ['ff_plan', 'ff_session', 'ff_theme', 'ff_tplopen', 'ff_welcomed',
-   'ff_favs', 'ff_log', 'ff_pr'].forEach(k => {
-    try { localStorage.removeItem(k); } catch (e) {}
-  });
-  location.reload();
-}
+/* 旧版本可能留下的个人数据键，启动即静默清掉；新版不再写入、也不提供导出入口 */
+try {
+  ['ff_favs', 'ff_log', 'ff_pr', 'ff_views'].forEach(k => localStorage.removeItem(k));
+} catch (e) {}
 
 /* ═════════ 筛选与搜索增强 ═════════ */
 function fuzzyHit(text, q) {
