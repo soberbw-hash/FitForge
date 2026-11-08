@@ -362,7 +362,6 @@ showDetail = function (id) {
   const ex = EXERCISES.find(e => e.id === id), x = EXERCISE_EXTRA[id];
   if (!ex) return;
   const body = document.getElementById('detailBody');
-  const acts = document.getElementById('detailActions');
   if (body && x) {
     body.insertAdjacentHTML('beforeend', `
       <div class="detail-sec"><h4>肌肉与内容标签</h4>
@@ -376,8 +375,6 @@ showDetail = function (id) {
         <p class="credit">动作演示来源：${EXTRA_CREDIT}</p>
       </div>`);
   }
-  if (acts) acts.insertAdjacentHTML('afterbegin',
-    `<button class="btn btn-soft" onclick="closeModal('detailModal');startSingleSession('${id}')">${ic('play')}跟练这个动作</button>`);
 };
 
 /* ═════════ 视图切换 ═════════ */
@@ -464,11 +461,35 @@ function toggleFilters() {
 const _origDoFilter = doFilter;
 doFilter = function () { _origDoFilter(); try { updateFilterBadge(); } catch (e) {} };
 
-/* ═════════ 首次使用引导 ═════════ */
-function dismissWelcome() {
+/* ═════════ 首次使用引导：三步都是真入口，不写说明书 ═════════ */
+function dismissWelcome(remember = true) {
   const w = document.getElementById('welcomeBar');
   if (w) w.hidden = true;
-  try { localStorage.setItem('ff_welcomed', '1'); } catch (e) {}
+  if (remember) { try { localStorage.setItem('ff_welcomed', '1'); } catch (e) {} }
+}
+function pulse(el) {
+  if (!el) return;
+  el.classList.remove('ff-pulse');
+  void el.offsetWidth;
+  el.classList.add('ff-pulse');
+  setTimeout(() => el.classList.remove('ff-pulse'), 2400);
+}
+function guideStep(n) {
+  dismissWelcome(n === 3);
+  if (n === 1) {
+    const b = document.querySelector('.card .card-add');
+    if (!b) return;
+    const r = b.getBoundingClientRect();
+    if (r.top < 0 || r.bottom > innerHeight) {
+      try { b.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+    }
+    pulse(b);
+  } else if (n === 2) {
+    switchView('planner');
+    pulse(document.querySelector('.tpl-fold'));
+  } else if (n === 3) {
+    try { openExport('all'); } catch (e) { switchView('planner'); }
+  }
 }
 
 function buildBottomNav() {

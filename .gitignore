@@ -8,6 +8,7 @@ _*.json
 *.log
 audit_shots/
 _web_preview/
+_portable_test/
 web/
 
 # 依赖

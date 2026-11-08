@@ -241,6 +241,8 @@ function cardHTML(ex) {
     <div class="card-media">
       <img src="${ex.gifUrl}" alt="${ex.name}" loading="lazy">
       ${heatPillHTML(ex)}
+      <button class="card-add" title="加入周计划" aria-label="把${ex.name}加入周计划"
+        onclick="event.stopPropagation();quickAdd('${ex.id}')">${ic('plus')}</button>
     </div>
     <div class="card-body">
       <div class="card-title">${ex.name}</div>
@@ -355,6 +357,7 @@ function showDetail(id) {
 
   document.getElementById('detailActions').innerHTML = `
     <button class="btn btn-solid" onclick="addToPlanFromDetail('${ex.id}')">${ic('plus')}加入周计划</button>
+    <button class="btn btn-soft" onclick="closeModal('detailModal');startSingleSession('${ex.id}')">${ic('play')}跟练这个动作</button>
     <button class="btn btn-soft" onclick="startRestTimer(${ex.restSec})">${ic('clock')}休息计时</button>
     <button class="btn btn-ghost modal-close-btn" onclick="closeModal('detailModal')">关闭</button>
   `;
@@ -362,17 +365,23 @@ function showDetail(id) {
   openModal('detailModal');
 }
 
-function addToPlanFromDetail(id) {
-  closeModal('detailModal');
+/* 卡片右上角的「+」：跳过详情，直接选加到哪天 */
+function quickAdd(id) {
   state.pickerTargetDay = null;
   showDayPicker(id);
+}
+
+function addToPlanFromDetail(id) {
+  closeModal('detailModal');
+  quickAdd(id);
 }
 
 function showDayPicker(exId) {
   const ex = EXERCISES.find(e => e.id === exId);
   if (!ex) return;
+  /* 选「哪天」时搜索框没有作用，藏起来免得用户以为该输入点什么 */
   const search = document.querySelector('#pickerModal .search');
-  if (search) search.style.display = '';
+  if (search) search.style.display = 'none';
   document.getElementById('pickerTitle').textContent = `把「${ex.name}」加到哪天`;
   document.getElementById('pickerList').innerHTML = DAYS.map(d => {
     const day = state.weeklyPlan[d] || { name:'', exercises:[] };
@@ -567,7 +576,10 @@ function addExToDay(exId, dayKey) {
   renderWeek();
   closeModal('pickerModal');
   closeModal('detailModal');
-  toast(`「${ex.name}」已加入${DAY_NAMES[dayKey]}`);
+  /* 从动作库加入时给一个去周计划的入口，形成「挑 → 排 → 导出」的闭环 */
+  toast(`已加入${DAY_NAMES[dayKey]}`, 'ok', state.view === 'planner' ? null : {
+    label: '去看看', fn: () => switchView('planner')
+  });
 }
 
 function removeEx(dayKey, idx) {

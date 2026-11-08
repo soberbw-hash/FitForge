@@ -439,7 +439,7 @@ async function renderExport() {
     const rest = exportState.range === 'today';
     box.innerHTML = rest
       ? '<div class="export-empty">今天 · 休息日<br><span>好好恢复，下次训练更有状态</span><br><button class="btn btn-soft" onclick="setExportRange(\'all\')">查看全部训练日</button></div>'
-      : '<div class="export-empty">当前还没有安排训练动作<br><span>先在周计划里选一套模板，再回来导出</span></div>';
+      : '<div class="export-empty">还没有训练卡<br><span>先在周计划里选一套模板</span><br><button class="btn btn-soft" onclick="closeModal(\'exportModal\');switchView(\'planner\');toggleTplLib(true)">去选模板</button></div>';
     exportState.cards = [];
     updateExportButtons();
     return;
@@ -529,7 +529,13 @@ function updateExportButtons() {
 }
 
 function openExport(range) {
-  exportState.range = range || 'all';
+  let r = range || 'all';
+  /* 今天休息时，顶栏入口直接给整周成品，别让第一次点进来的人对着空白 */
+  if (r === 'today') {
+    const has = d => (state.weeklyPlan[d]?.exercises || []).length > 0;
+    if (!has(todayKey()) && DAYS.some(has)) r = 'all';
+  }
+  exportState.range = r;
   exportState.active = 0;
   document.querySelectorAll('#exportModal .seg-btn[data-range]').forEach(b => {
     b.classList.toggle('on', b.dataset.range === exportState.range);

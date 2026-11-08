@@ -60,7 +60,7 @@
     </nav>
 
     <div class="top-right">
-      <button class="icon-btn" id="todayCardBtn" title="今日训练卡" aria-label="查看今日训练卡" onclick="openExport('today')"><svg class="ic"><use href="#i-image"/></svg></button>
+      <button class="icon-btn" id="todayCardBtn" title="查看训练卡" aria-label="查看训练卡" onclick="openExport('today')"><svg class="ic"><use href="#i-image"/></svg></button>
       <button class="icon-btn" id="themeBtn" title="切换深浅主题" aria-label="切换深浅主题"><svg class="ic"><use href="#i-moon"/></svg></button>
       <button class="icon-btn" id="aboutBtn" title="关于与数据说明" aria-label="关于与数据说明" onclick="openAbout()"><svg class="ic"><use href="#i-info"/></svg></button>
     </div>
@@ -78,13 +78,16 @@
       </div>
     </div>
 
-    <div class="welcome-bar" id="welcomeBar" hidden>
-      <span class="wb-ic"><svg class="ic"><use href="#i-info"/></svg></span>
-      <div class="wb-txt"><b>第一次用？三步做一张训练卡</b><span>动作库挑动作 → 排进周计划 → 导出成图片，随时翻出来看</span></div>
-      <div class="wb-acts">
-        <button class="btn btn-solid btn-sm" onclick="dismissWelcome();switchView('planner')">去排计划</button>
-        <button class="btn btn-ghost btn-sm" onclick="dismissWelcome()">知道了</button>
+    <div class="start-bar" id="welcomeBar" hidden>
+      <span class="sb-lead">三步做一张训练卡</span>
+      <div class="sb-steps">
+        <button class="sb-step" onclick="guideStep(1)"><i>1</i>挑动作</button>
+        <svg class="ic sb-arrow"><use href="#i-arrow-right"/></svg>
+        <button class="sb-step" onclick="guideStep(2)"><i>2</i>排进周计划</button>
+        <svg class="ic sb-arrow"><use href="#i-arrow-right"/></svg>
+        <button class="sb-step" onclick="guideStep(3)"><i>3</i>导出图片</button>
       </div>
+      <button class="sb-x" onclick="dismissWelcome()" aria-label="不再显示" title="不再显示"><svg class="ic"><use href="#i-x"/></svg></button>
     </div>
 
     <div class="filters" id="filtersBar">
@@ -174,7 +177,7 @@
           <button class="seg-btn" data-v="back" onclick="showBodyView('back')">背面</button>
         </div>
         <div id="bodySvgContainer" class="body-holder"></div>
-        <div class="map-hint">点肌肉高亮 · 右侧看对应动作</div>
+        <div class="map-hint">点身体部位，看对应动作</div>
       </div>
       <div class="panel map-info">
         <h2 id="muscleName">肌群速览</h2>
