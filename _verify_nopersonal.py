@@ -75,12 +75,19 @@ def main():
             }
             return r;
         }""")
-        out['toolsDataNote'] = page.evaluate("""() => {
+        out['aboutDataNote'] = page.evaluate("""() => {
             switchView('tools');
-            const d = document.querySelector('.data-note');
-            const r = { exists: !!d, text: d ? d.textContent.replace(/\\s+/g,' ').trim().slice(0,60) : '',
+            const leftover = document.querySelectorAll('#view-tools .data-note, #view-tools .pop-src').length;
+            openAbout();
+            const m = document.getElementById('aboutModal');
+            const d = m.querySelector('.data-note');
+            const r = { exists: !!d, open: m.classList.contains('on'),
+                        sources: m.querySelectorAll('.pop-src').length, leftoverNotes: leftover,
+                        toolsCards: document.querySelectorAll('.tool-card').length,
+                        text: d ? d.textContent.replace(/\\s+/g,' ').trim().slice(0,60) : '',
                         clearBtn: typeof clearLocalData === 'function',
                         overflow: document.documentElement.scrollWidth - innerWidth };
+            closeModal('aboutModal');
             switchView('library');
             return r;
         }""")
@@ -137,7 +144,7 @@ def main():
         out['sessionClean'] = not any(k in out['session'].get('keys', []) for k in BANNED)
         page.evaluate("try { closeSession(); } catch(e) {}")
 
-        # 手机端：周计划说明条与工具箱说明卡不溢出
+        # 手机端：周计划说明条 / 工具箱单列 / 关于弹窗不溢出
         m = browser.new_page(viewport={'width': 390, 'height': 844})
         m.goto(BASE + '/index.html', wait_until='domcontentloaded', timeout=90000)
         m.wait_for_selector('.card', timeout=30000)
@@ -153,10 +160,19 @@ def main():
         m.wait_for_timeout(400)
         out['mobileTools'] = m.evaluate("""() => ({
             overflow: document.documentElement.scrollWidth - innerWidth,
-            noteVisible: !!document.querySelector('.data-note')
+            cards: document.querySelectorAll('.tool-card').length,
+            cols: getComputedStyle(document.querySelector('.tool-grid')).gridTemplateColumns.split(' ').length
         })""")
         m.screenshot(path='_nopersonal_tools_mobile.png')
-        m.evaluate("switchView('library')")
+        m.evaluate("openAbout()")
+        m.wait_for_timeout(300)
+        out['mobileAbout'] = m.evaluate("""() => ({
+            overflow: document.documentElement.scrollWidth - innerWidth,
+            visible: document.getElementById('aboutModal').classList.contains('on'),
+            sources: document.querySelectorAll('#aboutSources .pop-src').length
+        })""")
+        m.screenshot(path='_nopersonal_about_mobile.png')
+        m.evaluate("closeModal('aboutModal'); switchView('library')")
         m.wait_for_timeout(300)
         m.screenshot(path='_nopersonal_library_mobile.png')
 
@@ -177,8 +193,13 @@ def main():
         fails.append('视图切换失败')
     if out['jsErrors'] or out['badResponses']:
         fails.append('有 JS 报错或 4xx')
-    if out['mobilePlanner']['overflow'] or out['mobileTools']['overflow']:
+    a = out['aboutDataNote']
+    if not a['exists'] or not a['open'] or a['sources'] != 6 or a['leftoverNotes'] or a['toolsCards'] != 6:
+        fails.append('关于弹窗内容或工具箱清理不彻底')
+    if out['mobilePlanner']['overflow'] or out['mobileTools']['overflow'] or out['mobileAbout']['overflow']:
         fails.append('手机端横向溢出')
+    if out['mobileTools']['cols'] != 1 or not out['mobileAbout']['visible']:
+        fails.append('手机端布局或关于弹窗异常')
     print('\n' + ('✓ 全部通过' if not fails else '✗ 失败：' + ' / '.join(fails)))
     return 1 if fails else 0
 

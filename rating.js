@@ -89,7 +89,7 @@ function heatSourcesHTML(ex) {
   ).join('') + (i.approx ? '<span class="hs-item hs-approx">同族近似</span>' : '');
 }
 
-/* 工具箱：完整来源清单（纯静态展示，点击打开原页面，不影响离线使用） */
+/* 「关于」弹窗：公开榜单来源清单（静态展示，链接需用户主动点击） */
 function popularitySourcesHTML() {
   if (typeof POP_SOURCES === 'undefined') return '';
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
@@ -99,8 +99,7 @@ function popularitySourcesHTML() {
       <span class="pop-src-l"><b>${esc(s.short)}</b><small>${esc(s.date)} · 权重 ${s.w.toFixed(2)}</small></span>
       <span class="pop-src-r"><span>${esc(s.sample)}</span><small>${esc(s.metric)}</small></span>
     </a>`).join('');
-  return `<p class="tool-note">${esc(m ? m.method : '')}</p>
+  return `<p class="tool-note">${esc(m ? m.built : '')} 一次性调研 ${m ? m.sources : POP_SOURCES.length} 份公开榜单，固化成静态分值：${m ? m.evidence : 0} 个动作有实证，其余按同类动作推断。不联网、不更新、与你的训练无关。</p>
     <div class="pop-src-list">${rows}</div>
-    <p class="tool-note">${esc(m ? m.limitation : '')}</p>
-    ${m ? `<p class="tool-note">调研于 ${esc(m.built)} 固化：${m.sources} 份来源 / ${m.boards} 张榜单 / ${m.rows} 条记录 → ${m.evidence} 个动作有实证，其余 ${m.inferred} 个标记为推断。本站运行时不联网。</p>` : ''}`;
+    <p class="tool-note">各来源口径不同，分值只用于排序，不是任何平台的真实占比。</p>`;
 }

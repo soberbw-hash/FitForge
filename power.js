@@ -15,7 +15,7 @@ function renderTools() {
   <div class="tool-grid">
 
     <section class="tool-card">
-      <div class="tool-h"><span class="tool-ic">${ic('dumbbell')}</span><div><h3>1RM 极限重量估算</h3><p>用一组力竭成绩，估算一次能举起的最大重量</p></div></div>
+      <div class="tool-h"><span class="tool-ic">${ic('dumbbell')}</span><div><h3>1RM 极限重量估算</h3><p>一组力竭成绩，估算极限重量</p></div></div>
       <div class="tool-form">
         <label>重量 <input type="number" id="rmW" value="60" min="1" step="2.5" oninput="calc1RM()"><span>kg</span></label>
         <label>次数 <input type="number" id="rmR" value="8" min="1" max="20" oninput="calc1RM()"><span>次</span></label>
@@ -24,16 +24,7 @@ function renderTools() {
     </section>
 
     <section class="tool-card">
-      <div class="tool-h"><span class="tool-ic">${ic('target')}</span><div><h3>杠铃片配重</h3><p>算出每边该挂哪些片，不用蹲在地上心算</p></div></div>
-      <div class="tool-form">
-        <label>目标 <input type="number" id="plW" value="100" min="10" step="2.5" oninput="calcPlates()"><span>kg</span></label>
-        <label>杆重 <select id="plBar" onchange="calcPlates()"><option value="20">20kg 奥杆</option><option value="15">15kg 女杆</option><option value="10">10kg 短杆</option><option value="0">无杆</option></select></label>
-      </div>
-      <div id="plOut"></div>
-    </section>
-
-    <section class="tool-card">
-      <div class="tool-h"><span class="tool-ic">${ic('flame')}</span><div><h3>身体数据与热量</h3><p>BMI · 基础代谢 · 每日消耗 · 三大营养素</p></div></div>
+      <div class="tool-h"><span class="tool-ic">${ic('flame')}</span><div><h3>身体数据与热量</h3><p>BMI · 代谢 · 每日消耗 · 营养素</p></div></div>
       <div class="tool-form four">
         <label>性别 <select id="bdSex" onchange="calcBody()"><option value="m">男</option><option value="f">女</option></select></label>
         <label>年龄 <input type="number" id="bdAge" value="28" min="10" max="90" oninput="calcBody()"></label>
@@ -48,13 +39,22 @@ function renderTools() {
     </section>
 
     <section class="tool-card">
-      <div class="tool-h"><span class="tool-ic">${ic('zap')}</span><div><h3>心率区间</h3><p>按年龄估算最大心率与 5 个训练区间</p></div></div>
+      <div class="tool-h"><span class="tool-ic">${ic('zap')}</span><div><h3>心率区间</h3><p>最大心率与 5 个训练区间</p></div></div>
       <div class="tool-form"><label>年龄 <input type="number" id="hrAge" value="28" min="10" max="90" oninput="calcHR()"><span>岁</span></label></div>
       <div id="hrOut"></div>
     </section>
 
     <section class="tool-card">
-      <div class="tool-h"><span class="tool-ic">${ic('chart')}</span><div><h3>训练容量计算</h3><p>组 × 次 × 重量，衡量一次训练做了多少功</p></div></div>
+      <div class="tool-h"><span class="tool-ic">${ic('target')}</span><div><h3>杠铃片配重</h3><p>每边该挂哪些片</p></div></div>
+      <div class="tool-form">
+        <label>目标 <input type="number" id="plW" value="100" min="10" step="2.5" oninput="calcPlates()"><span>kg</span></label>
+        <label>杆重 <select id="plBar" onchange="calcPlates()"><option value="20">20kg 奥杆</option><option value="15">15kg 女杆</option><option value="10">10kg 短杆</option><option value="0">无杆</option></select></label>
+      </div>
+      <div id="plOut"></div>
+    </section>
+
+    <section class="tool-card">
+      <div class="tool-h"><span class="tool-ic">${ic('chart')}</span><div><h3>训练容量计算</h3><p>组 × 次 × 重量</p></div></div>
       <div class="tool-form three">
         <label>组数 <input type="number" id="volS" value="4" min="1" oninput="calcVol()"></label>
         <label>次数 <input type="number" id="volR" value="10" min="1" oninput="calcVol()"></label>
@@ -64,28 +64,14 @@ function renderTools() {
     </section>
 
     <section class="tool-card">
-      <div class="tool-h"><span class="tool-ic">${ic('download')}</span><div><h3>周计划存成文件</h3><p>换设备继续编辑，或者留个底</p></div></div>
+      <div class="tool-h"><span class="tool-ic">${ic('download')}</span><div><h3>周计划存成文件</h3><p>换设备继续编辑</p></div></div>
       <div class="backup-row">
         <button class="btn btn-solid" onclick="backupData()">${ic('download')}导出周计划</button>
         <label class="btn btn-soft">${ic('rotate')}从文件读回<input type="file" accept="application/json,.json" style="display:none" onchange="restoreData(this)"></label>
         <button class="btn btn-ghost" onclick="clearLocalData()">${ic('trash')}清空本机数据</button>
       </div>
-      <p class="tool-note">文件只在本机生成，不上传任何服务器。旧版备份里的周计划也能读回来。</p>
+      <p class="tool-note">文件只在本机生成，旧版备份也能读回。</p>
       <div id="backupInfo"></div>
-    </section>
-
-    <section class="tool-card wide">
-      <div class="tool-h"><span class="tool-ic">${ic('info')}</span><div><h3>数据存在哪</h3><p>没有账号，也不上传</p></div></div>
-      <div class="data-note">
-        <p>本站是纯静态页面：没有账号系统、没有数据库、没有后端接口。运行时除了下载同源的动作 GIF 和动画分块，不发任何请求。</p>
-        <p><b>周计划只保存在这台设备的这个浏览器里</b>，另外还有跟练的临时进度和主题偏好。换浏览器、换设备、无痕窗口、清缓存都会丢；别人打开这个网址，看到的是一份全新的默认计划。</p>
-        <p>导出的训练卡图片是普通文件，不受这些限制，可以随便发、随便存。想把计划搬到别处，用上面的「导出周计划」。</p>
-      </div>
-    </section>
-
-    <section class="tool-card full">
-      <div class="tool-h"><span class="tool-ic">${ic('chart')}</span><div><h3>热门度是怎么来的</h3><p>联网调研一次，固化成死数据；网站运行时完全离线</p></div></div>
-      ${popularitySourcesHTML()}
     </section>
   </div>`;
   ['calc1RM', 'calcPlates', 'calcBody', 'calcHR', 'calcVol'].forEach(f => { try { window[f](); } catch (e) {} });
@@ -105,11 +91,11 @@ function calc1RM() {
     ["O'Conner", w * (1 + r / 40)]
   ].filter(x => x[1] > 0);
   const avg = forms.reduce((s, x) => s + x[1], 0) / forms.length;
-  const table = [[95, 2], [90, 4], [85, 6], [80, 8], [75, 10], [70, 12], [65, 15]];
+  const table = [[90, 4], [85, 6], [80, 8], [75, 10], [70, 12]];
   out.innerHTML = `
     <div class="tool-big">${avg.toFixed(1)}<span>kg 估算 1RM</span></div>
     <div class="tool-mini">${forms.map(f => `${f[0]} ${f[1].toFixed(1)}kg`).join(' · ')}</div>
-    ${r > 12 ? '<p class="tool-warn">次数超过 12 次，估算偏差较大，建议用 5-8 组的成绩重算。</p>' : ''}
+    ${r > 12 ? '<p class="tool-warn">超过 12 次偏差较大，建议用 5–8 次成绩重算。</p>' : ''}
     <div class="pct-table"><div class="pct-h"><span>强度</span><span>参考次数</span><span>训练重量</span></div>
     ${table.map(([p, reps]) => `<div><span>${p}%</span><span>约 ${reps} 次</span><b>${(avg * p / 100).toFixed(1)} kg</b></div>`).join('')}</div>`;
 }
@@ -118,7 +104,7 @@ function calcPlates() {
   const target = num('plW', 100), bar = num('plBar', 20), out = document.getElementById('plOut');
   if (!out) return;
   const each = (target - bar) / 2;
-  if (each < 0) { out.innerHTML = `<p class="tool-warn">目标重量比空杆还轻，检查一下输入。</p>`; return; }
+  if (each < 0) { out.innerHTML = `<p class="tool-warn">目标重量比空杆还轻。</p>`; return; }
   const plates = [25, 20, 15, 10, 5, 2.5, 1.25], res = [];
   let left = each;
   plates.forEach(p => { const n = Math.floor((left + 0.001) / p); if (n > 0) { res.push([p, n]); left = Math.round((left - n * p) * 100) / 100; } });
@@ -126,7 +112,7 @@ function calcPlates() {
   out.innerHTML = `
     <div class="tool-big">${each.toFixed(2)}<span>kg / 每边</span></div>
     <div class="plate-row">${res.length ? res.map(([p, n]) => `<span class="plate" data-p="${p}">${p}<small>kg</small>${n > 1 ? `<i>×${n}</i>` : ''}</span>`).join('') : '<span class="tool-mini">只需空杆</span>'}</div>
-    ${Math.abs(actual - target) > 0.01 ? `<p class="tool-warn">配不出精确 ${target}kg，最接近 ${actual.toFixed(1)}kg（每边余 ${left.toFixed(2)}kg）。</p>` : '<p class="tool-mini">可以精确配出目标重量。</p>'}`;
+    ${Math.abs(actual - target) > 0.01 ? `<p class="tool-warn">无法精确配出，最接近 ${actual.toFixed(1)}kg（每边余 ${left.toFixed(2)}kg）。</p>` : '<p class="tool-mini">可精确配出目标重量。</p>'}`;
 }
 
 function calcBody() {
@@ -160,7 +146,7 @@ function calcHR() {
   out.innerHTML = `<div class="tool-big">${max}<span>次/分 · 估算最大心率</span></div>
     <div class="pct-table"><div class="pct-h"><span>区间</span><span>心率范围</span><span>用途</span></div>
     ${zones.map(([n, a, b, u]) => `<div><span>${n}</span><b>${Math.round(max * a)}-${Math.round(max * b)}</b><span>${u}</span></div>`).join('')}</div>
-    <p class="tool-note">公式 220 − 年龄为粗略估算，实际最大心率因人而异。</p>`;
+    <p class="tool-note">220 − 年龄为粗估，实际因人而异。</p>`;
 }
 
 function calcVol() {
@@ -168,7 +154,7 @@ function calcVol() {
   const s = num('volS', 4), r = num('volR', 10), w = num('volW', 50);
   const v = s * r * w;
   out.innerHTML = `<div class="tool-big">${Math.round(v).toLocaleString('zh-CN')}<span>kg · 本次训练容量</span></div>
-    <p class="tool-mini">${s} 组 × ${r} 次 × ${w}kg　·　自重动作建议按「次数 × 组数」单独衡量</p>`;
+    <p class="tool-mini">${s} 组 × ${r} 次 × ${w}kg　·　自重动作只计组数次数</p>`;
 }
 
 /* ═════════ 周计划存成文件 / 读回 / 清空本机数据 ═════════ */
@@ -193,7 +179,7 @@ function restoreData(input) {
     try {
       const d = JSON.parse(fr.result);
       if (d.app !== 'FitForge' || !d.plan) throw new Error('不是 FitForge 周计划文件');
-      if (!confirm('导入会替换当前的周计划。\n建议先导出一份留底，确定继续吗？')) return;
+      if (!confirm('导入会替换当前周计划，继续吗？')) return;
       const before = JSON.parse(JSON.stringify(state.weeklyPlan));
       state.weeklyPlan = d.plan;
       DAYS.forEach(day => { if (!state.weeklyPlan[day]) state.weeklyPlan[day] = { name: '', exercises: [] }; });
@@ -213,7 +199,7 @@ function restoreData(input) {
 }
 /* 顺手清掉旧版本可能留下的收藏 / 训练记录 / 个人纪录，不再保留任何历史个人数据 */
 function clearLocalData() {
-  if (!confirm('会清空这台设备上的周计划、跟练进度和主题偏好，并恢复默认计划。\n导出的训练卡图片不受影响。确定继续吗？')) return;
+  if (!confirm('清空本机周计划、跟练进度和主题偏好，恢复默认计划。导出的训练卡不受影响，继续吗？')) return;
   ['ff_plan', 'ff_session', 'ff_theme', 'ff_tplopen', 'ff_welcomed',
    'ff_favs', 'ff_log', 'ff_pr'].forEach(k => {
     try { localStorage.removeItem(k); } catch (e) {}
@@ -461,6 +447,14 @@ switchView = function (v, fromPop) {
 function openHelp() {
   const m = document.getElementById('helpModal');
   if (m) openModal('helpModal');
+}
+/* 说明类内容统一收进「关于」，工具箱只留能上手用的工具 */
+function openAbout() {
+  const box = document.getElementById('aboutSources');
+  if (box && !box.dataset.ready) {
+    try { box.innerHTML = popularitySourcesHTML(); box.dataset.ready = '1'; } catch (e) {}
+  }
+  openModal('aboutModal');
 }
 document.addEventListener('keydown', e => {
   if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;

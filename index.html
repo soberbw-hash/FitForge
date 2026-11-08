@@ -62,6 +62,7 @@
     <div class="top-right">
       <button class="icon-btn" id="todayCardBtn" title="今日训练卡" aria-label="查看今日训练卡" onclick="openExport('today')"><svg class="ic"><use href="#i-image"/></svg></button>
       <button class="icon-btn" id="themeBtn" title="切换深浅主题" aria-label="切换深浅主题"><svg class="ic"><use href="#i-moon"/></svg></button>
+      <button class="icon-btn" id="aboutBtn" title="关于与数据说明" aria-label="关于与数据说明" onclick="openAbout()"><svg class="ic"><use href="#i-info"/></svg></button>
     </div>
   </div>
 </header>
@@ -151,7 +152,7 @@
 
     <div class="local-note">
       <svg class="ic"><use href="#i-info"/></svg>
-      <span>这只是<b>做训练卡的编辑器</b>：本站没有账号，服务器不存任何数据。周计划仅保存在当前这台设备的浏览器里，换设备或清缓存会消失；导出的图片是普通文件，可以随便发、随便存。想在别处接着改，去工具箱导出一份计划文件。</span>
+      <span>这是<b>做训练卡的编辑器</b>，不是训练记录：计划只存在这台设备的浏览器里，换设备或清缓存会消失。导出的图片可随意保存分享，详情见右上角「关于」。</span>
     </div>
 
     <div id="todayStrip"></div>
@@ -189,7 +190,7 @@
     <div class="page-head">
       <div>
         <h1>工具箱</h1>
-        <p class="page-sub">常用计算 · 计划存取 · 数据说明</p>
+        <p class="page-sub">六个小工具 · 常用计算与计划存取</p>
       </div>
     </div>
     <div id="toolsBody"></div>
@@ -324,6 +325,41 @@
         <div><kbd>?</kbd><span>打开这个帮助</span></div>
       </div>
       <p class="tool-note">在输入框里打字时，字母快捷键不会触发。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 关于 / 数据说明 ═══ -->
+<div class="overlay" id="aboutModal">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <h3>关于 FitForge</h3>
+      <button class="modal-x" onclick="closeModal('aboutModal')" aria-label="关闭"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="modal-body about-body">
+      <p class="about-lead">1324 个动作 · 真人动图 · 中文要领。纯静态页面，动作数据打包在站点里，运行时不联网。</p>
+
+      <section class="about-sec">
+        <h4>数据存在哪</h4>
+        <div class="data-note">
+          <p>没有账号、没有后端、不上传。周计划、跟练临时进度和主题偏好只存于当前浏览器；换设备、无痕窗口、清缓存都会丢。</p>
+          <p>导出的训练卡是普通图片，可以随便存、随便发。换设备继续编辑，用工具箱的「导出周计划」。</p>
+        </div>
+      </section>
+
+      <section class="about-sec">
+        <h4>难度星级</h4>
+        <p>原始动作库没有难度字段，星级按动作特征本地估算，仅供参考，不是官方评级。</p>
+      </section>
+
+      <section class="about-sec">
+        <h4>热门度怎么来的</h4>
+        <div id="aboutSources"></div>
+      </section>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('aboutModal');openHelp()">键盘快捷键</button>
+      <button class="btn btn-solid modal-close-btn" onclick="closeModal('aboutModal')">知道了</button>
     </div>
   </div>
 </div>
