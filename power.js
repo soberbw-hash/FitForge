@@ -269,10 +269,8 @@ getFiltered = function () {
     return true;
   });
   const heatCmp = (a, b) => (FFHeat.score(b) - FFHeat.score(a)) || a.id.localeCompare(b.id);
-  if (sort === 'name') list = list.slice().sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
-  else if (sort === 'random') list = list.slice().sort(() => Math.random() - .5);
-  else if (sort === 'hot') list = list.slice().sort(heatCmp);
-  else if (sort === 'starLow' || sort === 'starHigh' || sort === 'easy') {
+  if (sort === 'hot') list = list.slice().sort(heatCmp);
+  else if (sort === 'starLow' || sort === 'starHigh') {
     /* 同星级内按热度再排一次，避免几百个动作挤在一起看不出差别 */
     const asc = sort !== 'starHigh';
     list = list.slice().sort((a, b) => {
@@ -311,8 +309,7 @@ function injectFilterExtras() {
   const sortHTML = document.getElementById('sortSelect') ? '' : `
     <select class="sel" id="sortSelect" onchange="doFilter()">
       <option value="default">默认排序</option><option value="hot">热门优先</option>
-      <option value="starHigh">星级 高 → 低</option><option value="starLow">星级 低 → 高</option>
-      <option value="name">按名称</option><option value="random">随机打乱</option></select>`;
+      <option value="starHigh">星级 高 → 低</option><option value="starLow">星级 低 → 高</option></select>`;
   const html = `
     <select class="sel" id="partSelect" onchange="doFilter()"><option value="all">全部分类</option>
       ${parts.map(p => `<option value="${p}">${PART_ZH[p] || p}</option>`).join('')}</select>
