@@ -241,7 +241,7 @@ getFiltered = function () {
   const diff = document.getElementById('diffSelect')?.value || 'all';
   const part = document.getElementById('partSelect')?.value || 'all';
   const tag = document.getElementById('tagSelect')?.value || 'all';
-  const sort = document.getElementById('sortSelect')?.value || 'default';
+  const sort = document.getElementById('sortSelect')?.value || 'hot';
   let list = EXERCISES.filter(ex => {
     if (q && !searchScore(ex, q)) return false;
     if (state.muscleFilter !== 'all' && (ex.category === 'cardio' || (!ex.primary.includes(state.muscleFilter) && !ex.secondary.includes(state.muscleFilter)))) return false;
@@ -255,14 +255,16 @@ getFiltered = function () {
     return true;
   });
   const heatCmp = (a, b) => (FFHeat.score(b) - FFHeat.score(a)) || a.id.localeCompare(b.id);
-  if (sort === 'hot') list = list.slice().sort(heatCmp);
-  else if (sort === 'starLow' || sort === 'starHigh') {
+  if (sort === 'starLow' || sort === 'starHigh') {
     /* 同星级内按热度再排一次，避免几百个动作挤在一起看不出差别 */
     const asc = sort !== 'starHigh';
     list = list.slice().sort((a, b) => {
       const d = asc ? diffStarsOf(a) - diffStarsOf(b) : diffStarsOf(b) - diffStarsOf(a);
       return d || heatCmp(a, b);
     });
+  } else {
+    /* 默认即热门优先：首屏、重置筛选、取到未知值时都走这一支 */
+    list = list.slice().sort(heatCmp);
   }
   return list;
 };
@@ -272,7 +274,7 @@ function resetFilters() {
     const el = document.getElementById(id);
     if (!el) return;
     if (el.tagName === 'INPUT') el.value = '';
-    else el.value = id === 'sortSelect' ? 'default' : 'all';
+    else el.value = id === 'sortSelect' ? 'hot' : 'all';
   });
   ['forceSelect', 'mechSelect'].forEach(id => { const el = document.getElementById(id); if (el) el.value = 'all'; });
   state.muscleFilter = 'all'; state.forceFilter = 'all'; state.mechanicFilter = 'all';
@@ -294,7 +296,7 @@ function injectFilterExtras() {
   /* 排序已提到筛选条常驻；仅当旧版页面没有该控件时补一个，避免重复 id */
   const sortHTML = document.getElementById('sortSelect') ? '' : `
     <select class="sel" id="sortSelect" onchange="doFilter()">
-      <option value="default">默认排序</option><option value="hot">热门优先</option>
+      <option value="hot">热门优先</option>
       <option value="starHigh">星级 高 → 低</option><option value="starLow">星级 低 → 高</option></select>`;
   const html = `
     <select class="sel" id="partSelect" onchange="doFilter()"><option value="all">全部分类</option>
@@ -493,7 +495,7 @@ function activeFilterCount() {
     if (el && el.value && el.value !== 'all') n++;
   });
   const sort = document.getElementById('sortSelect');
-  if (sort && sort.value && sort.value !== 'default') n++;
+  if (sort && sort.value && sort.value !== 'hot') n++;
   if (state.muscleFilter && state.muscleFilter !== 'all') n++;
   const s = document.getElementById('searchInput');
   if (s && s.value.trim()) n++;
